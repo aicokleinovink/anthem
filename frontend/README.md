@@ -34,18 +34,28 @@ measured from the active tab (the labels are different widths) and kept correct 
 ResizeObserver. It stays hidden until the first measurement, so on load it fades in under
 the right tab instead of sliding in from the left.
 
-**One hook shape for everything.** `hooks/usePolled.ts` holds the pattern every control
-shares: poll the API for the truth, write optimistically, adopt what the receiver confirms,
-and roll back if the write never landed. Power, inputs, speaker profile and display are all
-thin wrappers over it. This is not only tidiness — the rollback used to be written out per
-hook and three of the four had quietly omitted it, leaving the UI showing a selection the
-receiver had never accepted. (`useVolume` stays separate: its press-coalescing is genuinely
-different.)
+**Nothing polls.** `hooks/useReceiver.ts` opens one `EventSource` on `/api/events` and the
+whole app renders from the snapshots it delivers. The receiver pushes its own changes, so
+touching the physical remote updates the UI in about 50 ms rather than within a polling
+interval. Writes still go over REST; the resulting change comes back on the stream like any
+other, which is what makes the app correct when something else changes the receiver.
 
-**Device state lives in `App.tsx`, not in the cards.** `useVolume` and `usePower` are held
-above the section switch and passed down, so they keep polling while another card is on
-screen. A hook inside `VolumeCard` would be unmounted on every tab change and the card
-would flash "connecting" and re-fetch each time you came back to it.
+Writes are optimistic: the change shows immediately, the next snapshot replaces it, and a
+failed write puts the previous value back.
+
+**Two things about the stream are load-bearing:**
+
+- **We do our own reconnection.** `EventSource` abandons a stream *permanently* when it
+  receives a non-200 — exactly what a proxy returns while the service behind it restarts.
+  Relying on its built-in retry leaves the page dead until someone reloads it. Ours retries
+  with backoff and recovers in about half a second.
+- **A watchdog, fed by the server's `ping` every 10 s.** A proxy can keep the connection
+  open after the service dies, so the stream just goes quiet and no error ever fires.
+  Twenty-five seconds of silence counts as offline and triggers a reconnect.
+
+**Device state lives in `App.tsx`, not in the cards**, so it survives switching sections. A
+hook inside `VolumeCard` would be unmounted on every tab change and the card would flash
+"connecting" each time you came back to it.
 
 The power button reads the receiver's real state (polled every 4 s, slower than volume
 since power rarely changes) and writes `PUT /api/power`. It is optimistic — the icon fills
@@ -139,9 +149,7 @@ the button also disables at that point.
   further presses accumulate and go out as a single `{ steps: N }`. This is deliberate: the
   receiver silently drops commands that arrive too fast (see the API README), so flooding it
   loses steps. Verified — five fast presses land exactly 5 dB away.
-- Polls every 2 s, so the dial follows the physical remote. The server's value always wins
-  over the optimistic one. Polling pauses while the tab is hidden; the first load runs
-  regardless, so a backgrounded tab still opens on the real level.
+- The dial follows the physical remote as it moves, since the receiver pushes every change.
 - If the API goes away the card dims to "Offline" and the buttons disable; it recovers on
   its own when the API returns, without a reload.
 
@@ -200,8 +208,8 @@ place, so every card would slide its pill in on load.
 
 ```
 src/api.ts                     typed client for the API
-src/hooks/usePolled.ts         poll / optimistic write / rollback, shared by four controls
-src/hooks/useVolume.ts         volume polling and press coalescing
+src/hooks/useReceiver.ts       the event stream: snapshots, reconnection, optimistic writes
+src/hooks/useVolume.ts         volume level and press coalescing
 src/components/                Card, Panel, Toolbar, PowerButton, PillList, VolumeDial, …
 src/cards/                     one card per toolbar section
 src/styles/global.css          tokens, reset, shared keyframes

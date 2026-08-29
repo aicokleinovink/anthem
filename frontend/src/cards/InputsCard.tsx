@@ -2,7 +2,12 @@ import { Card } from '../components/Card';
 import { Panel } from '../components/Panel';
 import { PillList } from '../components/PillList';
 import { SignalBars } from '../components/SignalBars';
-import type { InputsController } from '../hooks/useInputs';
+interface InputsController {
+  inputs: Array<{ input: number; name: string }>;
+  selected: number | null;
+  format: string | null;
+  select: (input: number) => void;
+}
 
 interface InputsCardProps {
   controller: InputsController;

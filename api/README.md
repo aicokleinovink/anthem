@@ -55,6 +55,7 @@ deeper and a relative hop from it would miss.
 | GET | `/api/zones/:zone/speaker-profiles` | | `{ profiles, input, inputName, selected }` |
 | PUT | `/api/zones/:zone/speaker-profile` | `{ "profile": 1 }` (optionally `"input"`) | `{ input, selected }` |
 | GET | `/api/display` | | `{ info, options }` |
+| GET | `/api/events` | | Server-sent events: the whole state, on connect and on every change |
 | PUT | `/api/display` | `{ "info": 0 }` | `{ info, options }` |
 
 ```bash
@@ -83,6 +84,22 @@ to this API.
 `MAX_VOLUME_DB` is therefore **off by default**. Set it in `.env` if you want the API to
 clamp below the receiver's own limit; whatever is in effect is reported as `maxDb` on every
 volume response, and a step-up stops there rather than walking past.
+
+## The event stream
+
+`GET /api/events` is how the UI reads state; the REST endpoints above are for writing (and
+for scripts and Shortcuts).
+
+The receiver pushes every change to every connected client — verified by watching one
+connection while another changed things: volume, input, speaker profile and the front panel
+setting all arrived unasked within about 50 ms. So this service never polls the receiver.
+It reads the full picture once on connect (`Receiver.refresh`), then keeps its cache up to
+date from those pushes and forwards a complete snapshot to each client whenever anything
+moves. Frames are coalesced over a 30 ms window, since one volume change arrives as two.
+
+A `ping` event goes out every 10 s. That is not only to keep proxies from dropping an idle
+stream — it gives clients something to *miss*, because a proxy can hold the connection open
+after this service dies and the only symptom is silence.
 
 ## Speaker profiles
 

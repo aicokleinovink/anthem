@@ -1,4 +1,4 @@
-import { MAX_DB, MIN_DB } from '../api';
+import { MIN_DB, MAX_DB } from '../api';
 import { Card } from '../components/Card';
 import { StepButton } from '../components/StepButton';
 import { VolumeDial } from '../components/VolumeDial';
@@ -19,7 +19,7 @@ interface VolumeCardProps {
 }
 
 export function VolumeCard({ controller, powerOn, offline }: VolumeCardProps) {
-  const { volume, displayDb, step } = controller;
+  const { displayDb, muted, maxDb, step } = controller;
   const { ripples, spawn } = useRipples();
 
   const press = (steps: number) => {
@@ -34,11 +34,9 @@ export function VolumeCard({ controller, powerOn, offline }: VolumeCardProps) {
   const ready = displayDb !== null;
 
   // The API only clamps if MAX_VOLUME_DB is set; by default this is the top of the scale.
-  const ceilingDb = volume?.maxDb ?? MAX_DB;
+  const ceilingDb = maxDb;
   const standby = powerOn === false;
   const locked = !ready || offline || standby;
-  // Someone can mute from the remote, and the level alone would not show it.
-  const muted = volume?.muted ?? false;
 
   return (
     <Card

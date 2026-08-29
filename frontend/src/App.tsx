@@ -1,30 +1,75 @@
 import { useState } from 'react';
+import { selectInput, setDisplay, setPower, setSpeakerProfile } from './api';
 import { InputsCard } from './cards/InputsCard';
 import { SettingsCard } from './cards/SettingsCard';
 import { VolumeCard } from './cards/VolumeCard';
 import { SECTIONS, SECTION_PANEL_ID, Toolbar, type Section } from './components/Toolbar';
-import { usePower } from './hooks/usePower';
-import { useInputs } from './hooks/useInputs';
-import { useDisplay } from './hooks/useDisplay';
-import { useSpeakerProfiles } from './hooks/useSpeakerProfiles';
+import { useReceiver } from './hooks/useReceiver';
 import { useVolume } from './hooks/useVolume';
 import styles from './App.module.css';
+
+/**
+ * Factory slot names. The receiver always reports four profiles; the ones nobody has
+ * named still come back as "Profile3", "Profile4" and are noise in a picker.
+ */
+const UNNAMED = /^Profile\d+$/;
 
 export default function App() {
   const [section, setSection] = useState<Section>('volume');
   const [direction, setDirection] = useState<'right' | 'left'>('right');
-  const { power, busy, offline: powerOffline, toggle } = usePower();
-  // Both live here so they keep polling while another section is on screen — coming back
-  // to a card should show the current state, not a fresh "connecting".
-  const volume = useVolume();
-  const inputs = useInputs();
-  const profiles = useSpeakerProfiles();
-  const display = useDisplay();
 
-  // One notion of offline for the whole app: everything talks to the same API, so if any
-  // of them cannot reach it, no control on screen can do anything.
-  const offline =
-    powerOffline || volume.offline || inputs.offline || profiles.offline || display.offline;
+  // One stream feeds every card, and keeps running while another card is on screen.
+  const receiver = useReceiver();
+  const volume = useVolume(receiver);
+  const { snapshot, offline, busy, write } = receiver;
+
+  const power = snapshot?.power ?? null;
+
+  const togglePower = () => {
+    if (!snapshot || power === null) return;
+    const target = !power;
+    write({ ...snapshot, power: target }, () => setPower(target));
+  };
+
+  const inputs = {
+    inputs: snapshot?.inputs.list ?? [],
+    selected: snapshot?.inputs.selected ?? null,
+    format: snapshot?.inputs.format ?? null,
+    select: (input: number) => {
+      if (!snapshot || input === snapshot.inputs.selected) return;
+      write(
+        // The format belongs to the old source; drop it until the receiver reports
+        // what is arriving on the new one.
+        { ...snapshot, inputs: { ...snapshot.inputs, selected: input, format: null } },
+        () => selectInput(input),
+      );
+    },
+  };
+
+  const all = snapshot?.speakerProfile.profiles ?? [];
+  const named = all.filter((profile) => !UNNAMED.test(profile.name));
+  const profiles = {
+    // Show the named profiles; fall back to all of them if none have been renamed.
+    profiles: named.length > 0 ? named : all,
+    selected: snapshot?.speakerProfile.selected ?? null,
+    inputName: snapshot?.speakerProfile.inputName ?? null,
+    select: (value: number) => {
+      if (!snapshot || value === snapshot.speakerProfile.selected) return;
+      write(
+        { ...snapshot, speakerProfile: { ...snapshot.speakerProfile, selected: value } },
+        () => setSpeakerProfile(value),
+      );
+    },
+  };
+
+  const display = {
+    options: snapshot?.display.options ?? [],
+    info: snapshot?.display.info ?? null,
+    select: (info: number) => {
+      if (!snapshot || info === snapshot.display.info) return;
+      write({ ...snapshot, display: { ...snapshot.display, info } }, () => setDisplay(info));
+    },
+  };
 
   // Cards enter from whichever side you moved towards in the toolbar, so the swap
   // reads as travelling with the sliding pill rather than as an unrelated fade.
@@ -42,7 +87,7 @@ export default function App() {
           power={power}
           powerBusy={busy}
           offline={offline}
-          onTogglePower={toggle}
+          onTogglePower={togglePower}
         />
 
         {/*

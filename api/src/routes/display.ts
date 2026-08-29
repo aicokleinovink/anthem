@@ -1,18 +1,10 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import type { Receiver } from '../device/receiver.js';
+import { DISPLAY_OPTIONS as INFO_OPTIONS } from '../device/snapshot.js';
 import { parseBody } from './zone.js';
 
 const displayBody = z.object({ info: z.number().int().min(0).max(1) });
-
-/**
- * Labels come from the receiver's own setup UI — the device reports only the number.
- * Index is the wire value: 0 = All, 1 = Volume Only.
- */
-const INFO_OPTIONS = [
-  { value: 0, label: 'All' },
-  { value: 1, label: 'Volume Only' },
-];
 
 export function displayRoutes(receiver: Receiver): Router {
   const router = Router();

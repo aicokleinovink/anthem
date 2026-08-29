@@ -4,6 +4,7 @@ import express, { type NextFunction, type Request, type Response } from 'express
 import { config } from './config.js';
 import type { Receiver } from './device/receiver.js';
 import { displayRoutes } from './routes/display.js';
+import { eventRoutes } from './routes/events.js';
 import { inputRoutes } from './routes/inputs.js';
 import { powerRoutes } from './routes/power.js';
 import { profileRoutes } from './routes/profiles.js';
@@ -47,6 +48,7 @@ export function createApp(receiver: Receiver): express.Express {
   app.use(express.json());
 
   app.use(systemRoutes(receiver));
+  app.use('/api', eventRoutes(receiver));
 
   // Zone-scoped routes, plus zone-1 aliases so /api/volume works without a zone.
   for (const mount of ['/api/zones/:zone', '/api']) {

@@ -1,0 +1,73 @@
+import { config } from '../config.js';
+import type { Zone } from '../protocol/commands.js';
+import { dbToPercent } from './volume.js';
+import type { ReceiverState } from './state.js';
+
+/**
+ * Everything the UI needs, in one object, derived from the cache the transport keeps
+ * up to date. Shaped for the client rather than for the protocol, so the frontend
+ * never has to know that volume arrives as `Z1VOL-80.0`.
+ */
+export interface Snapshot {
+  connected: boolean;
+  model?: string;
+  software?: string;
+  power: boolean | null;
+  volume: { db: number | null; percent: number | null; muted: boolean; maxDb: number };
+  inputs: {
+    list: Array<{ input: number; name: string }>;
+    selected: number | null;
+    format: string | null;
+  };
+  speakerProfile: {
+    profiles: Array<{ profile: number; value: number; name: string }>;
+    selected: number | null;
+    inputName: string | null;
+  };
+  display: { info: number | null; options: Array<{ value: number; label: string }> };
+}
+
+/** Labels for the front panel setting; the receiver reports only the number. */
+export const DISPLAY_OPTIONS = [
+  { value: 0, label: 'All' },
+  { value: 1, label: 'Volume Only' },
+];
+
+/** The receiver has four speaker-profile slots, named or not. */
+const PROFILE_SLOTS = 4;
+
+export function snapshot(state: ReceiverState, zone: Zone = 1): Snapshot {
+  const zoneState = state.zones[zone];
+  const db = zoneState.volumeDb ?? null;
+  const selected = zoneState.input ?? null;
+
+  const list = Array.from({ length: state.inputCount ?? 0 }, (_unused, index) => ({
+    input: index + 1,
+    name: state.inputNames[index + 1] ?? `Input ${index + 1}`,
+  }));
+
+  return {
+    connected: state.connected,
+    model: state.model,
+    software: state.software,
+    power: zoneState.power ?? null,
+    volume: {
+      db,
+      percent: db === null ? null : dbToPercent(db),
+      muted: zoneState.muted ?? false,
+      maxDb: config.maxVolumeDb,
+    },
+    inputs: { list, selected, format: zoneState.audioFormat ?? null },
+    speakerProfile: {
+      profiles: Array.from({ length: PROFILE_SLOTS }, (_unused, index) => ({
+        profile: index + 1,
+        // What the wire expects: 0 selects profile 1.
+        value: index,
+        name: state.profileNames[index + 1] ?? `Profile${index + 1}`,
+      })),
+      selected: selected === null ? null : (state.inputProfiles[selected] ?? null),
+      inputName: selected === null ? null : (state.inputNames[selected] ?? null),
+    },
+    display: { info: state.frontPanelInfo ?? null, options: DISPLAY_OPTIONS },
+  };
+}

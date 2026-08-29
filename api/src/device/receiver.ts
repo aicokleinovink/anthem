@@ -1,3 +1,4 @@
+import { EventEmitter } from 'node:events';
 import { config } from '../config.js';
 import { DeviceOfflineError } from '../errors.js';
 import { commands, type Zone } from '../protocol/commands.js';
@@ -19,24 +20,44 @@ const globalReply = (key: string) => (message: Message) =>
  * High-level view of the receiver: issue a command, get back the state the device
  * actually confirmed. Nothing here echoes the request.
  */
-export class Receiver {
+export class Receiver extends EventEmitter {
   readonly state: ReceiverState = emptyState();
 
+  /** Set while a 'changed' emit is already scheduled. */
+  #pendingChange?: NodeJS.Timeout;
+
   constructor(private readonly connection = new AnthemConnection()) {
+    super();
+
     this.connection.on('message', (message: Message) => {
       applyMessage(this.state, message);
+      this.#announce();
     });
     this.connection.on('connected', () => {
       this.state.connected = true;
+      this.#announce();
       void this.refresh();
     });
     this.connection.on('disconnected', () => {
       this.state.connected = false;
+      this.#announce();
     });
     this.connection.on('socketError', (error: Error) => {
       // Reconnection is handled by the transport; surface the reason and carry on.
       console.error(`[anthem] socket error: ${error.message}`);
     });
+  }
+
+  /**
+   * Tell listeners the state moved, at most once per window. A single volume change
+   * arrives as two frames (PVOL then VOL); coalescing keeps that one event.
+   */
+  #announce(): void {
+    if (this.#pendingChange) return;
+    this.#pendingChange = setTimeout(() => {
+      this.#pendingChange = undefined;
+      this.emit('changed');
+    }, 30);
   }
 
   start(): void {
@@ -47,17 +68,30 @@ export class Receiver {
     this.connection.close();
   }
 
-  /** Pull the values we care about after a (re)connect, so GETs are served warm. */
+  /**
+   * Read everything once after a (re)connect. From then on the receiver pushes its own
+   * changes, so this is the only place the full picture is pulled — it is what lets
+   * clients stop polling entirely.
+   */
   async refresh(): Promise<void> {
     try {
       await this.connection.send(commands.model(), globalReply('IDM'));
       await this.connection.send(commands.software(), globalReply('IDS'));
       await this.connection.send(commands.region(), globalReply('IDR'));
-      await this.connection.send(commands.inputCount(), globalReply('ICN'));
+
       for (const zone of [1, 2] as const) {
         await this.getPower(zone);
         await this.getVolume(zone);
       }
+
+      await this.listInputs();
+      const input = await this.getInput(1);
+      await this.getAudioFormat(1);
+
+      await this.listProfiles();
+      if (input !== undefined) await this.getInputProfile(input);
+
+      await this.getFrontPanelInfo();
     } catch (error) {
       console.error(`[anthem] refresh failed: ${(error as Error).message}`);
     }

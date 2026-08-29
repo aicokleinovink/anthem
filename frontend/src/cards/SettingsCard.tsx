@@ -1,8 +1,18 @@
 import { Card } from '../components/Card';
 import { Panel } from '../components/Panel';
 import { PillList } from '../components/PillList';
-import type { DisplayController } from '../hooks/useDisplay';
-import type { SpeakerProfilesController } from '../hooks/useSpeakerProfiles';
+interface SpeakerProfilesController {
+  profiles: Array<{ profile: number; value: number; name: string }>;
+  selected: number | null;
+  inputName: string | null;
+  select: (value: number) => void;
+}
+
+interface DisplayController {
+  options: Array<{ value: number; label: string }>;
+  info: number | null;
+  select: (info: number) => void;
+}
 
 interface SettingsCardProps {
   profiles: SpeakerProfilesController;

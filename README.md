@@ -61,6 +61,9 @@ UI is an echo of what was requested.
 - **Speaker profiles and the front panel setting are not in the published protocol.** Both
   were found by reading the receiver's own web app, which speaks the same protocol.
 - Speaker profile values are **0-based** while profile numbers are 1-based.
+- **The receiver pushes every change to every connected client**, so the UI reads a single
+  event stream and never polls. Change the volume on the remote and the dial moves within
+  about 50 ms.
 
 ## Tests
 
