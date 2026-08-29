@@ -10,7 +10,8 @@
     "build": "tsc -p tsconfig.json",
     "probe": "tsx --env-file-if-exists=.env scripts/probe.ts",
     "test": "tsx --test test/*.test.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "pair-tv": "tsx --env-file-if-exists=.env scripts/pair-tv.ts"
   },
   "dependencies": {
     "express": "^5.1.0",

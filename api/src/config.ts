@@ -26,6 +26,14 @@ export const config = {
    */
   playerUrl: process.env.PLAYER_URL ?? 'http://192.168.2.15:11000',
 
+  /**
+   * LG webOS television. The client key comes from pairing once — run
+   * `npm run pair-tv` with the set on and accept the prompt with the remote. Empty
+   * values disable the TV section.
+   */
+  tvHost: process.env.TV_HOST ?? '',
+  tvClientKey: process.env.TV_CLIENT_KEY ?? '',
+
   /** HTTP port for this API. */
   httpPort: num(process.env.PORT, 3000),
 

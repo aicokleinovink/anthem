@@ -131,6 +131,16 @@ its entrance. Two things prevent that: `connecting` is treated as a track change
 a stop, and `hooks/useSustained.ts` holds the last track for a few seconds when the streamer
 goes quiet.
 
+## TV
+
+Four pills — HDMI 1, PlayStation, YouTube, Netflix — switching the LG set's input or
+launching an app. The selection is not assumed: the API subscribes to what the TV reports
+as its foreground app, so the highlight follows the set even when you change it with its own
+remote, and shows nothing when it is on something outside this list.
+
+With the TV off the card says "Off" and disables, because a set that is off cannot be woken
+over the network.
+
 ## Settings
 
 Two settings, each in its own thin-outlined panel so they read as separate things rather

@@ -1,5 +1,6 @@
 import { config } from '../config.js';
 import type { NowPlaying } from '../player/bluos.js';
+import type { TvTarget } from '../tv/targets.js';
 import type { Zone } from '../protocol/commands.js';
 import { dbToPercent } from './volume.js';
 import type { ReceiverState } from './state.js';
@@ -28,6 +29,13 @@ export interface Snapshot {
   display: { info: number | null; options: Array<{ value: number; label: string }> };
   /** What the streamer is playing, or null when there is no streamer or nothing loaded. */
   player: NowPlaying | null;
+  tv: {
+    /** False when the TV is off or unreachable — it cannot be woken over the network. */
+    available: boolean;
+    /** Which target is on screen, when it is one we offer. */
+    current: string | null;
+    targets: Array<{ key: string; label: string }>;
+  };
 }
 
 /** Labels for the front panel setting; the receiver reports only the number. */
@@ -39,9 +47,16 @@ export const DISPLAY_OPTIONS = [
 /** The receiver has four speaker-profile slots, named or not. */
 const PROFILE_SLOTS = 4;
 
+export interface TvState {
+  available: boolean;
+  current: string | null;
+  targets: TvTarget[];
+}
+
 export function snapshot(
   state: ReceiverState,
   player: NowPlaying | null = null,
+  tv: TvState = { available: false, current: null, targets: [] },
   zone: Zone = 1,
 ): Snapshot {
   const zoneState = state.zones[zone];
@@ -78,5 +93,10 @@ export function snapshot(
     display: { info: state.frontPanelInfo ?? null, options: DISPLAY_OPTIONS },
     // Stopped is the same as nothing playing as far as the UI is concerned.
     player: player === null || player.state === 'stopped' ? null : player,
+    tv: {
+      available: tv.available,
+      current: tv.current,
+      targets: tv.targets.map(({ key, label }) => ({ key, label })),
+    },
   };
 }

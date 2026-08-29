@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { selectInput, setDisplay, setPower, setSpeakerProfile } from './api';
+import { selectInput, selectTvTarget, setDisplay, setPower, setSpeakerProfile } from './api';
 import { InputsCard } from './cards/InputsCard';
 import { SettingsCard } from './cards/SettingsCard';
+import { TvCard } from './cards/TvCard';
 import { VolumeCard } from './cards/VolumeCard';
 import { MiniPlayer } from './components/MiniPlayer';
 import { SECTIONS, SECTION_PANEL_ID, Toolbar, type Section } from './components/Toolbar';
@@ -71,6 +72,16 @@ export default function App() {
     },
   };
 
+  const tv = {
+    available: snapshot?.tv.available ?? false,
+    current: snapshot?.tv.current ?? null,
+    targets: snapshot?.tv.targets ?? [],
+    select: (target: string) => {
+      if (!snapshot || target === snapshot.tv.current) return;
+      write({ ...snapshot, tv: { ...snapshot.tv, current: target } }, () => selectTvTarget(target));
+    },
+  };
+
   const display = {
     options: snapshot?.display.options ?? [],
     info: snapshot?.display.info ?? null,
@@ -119,6 +130,7 @@ export default function App() {
           {section === 'inputs' && (
             <InputsCard key="inputs" controller={inputs} powerOn={power} offline={offline} />
           )}
+          {section === 'tv' && <TvCard key="tv" controller={tv} offline={offline} />}
           {section === 'settings' && (
             <SettingsCard
               key="settings"

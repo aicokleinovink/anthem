@@ -58,6 +58,7 @@ deeper and a relative hop from it would miss.
 | GET | `/api/events` | | Server-sent events: the whole state, on connect and on every change |
 | POST | `/api/player` | `{ "action": "play" \| "pause" \| "next" \| "previous" }` | `{ action }` |
 | PUT | `/api/display` | `{ "info": 0 }` | `{ info, options }` |
+| PUT | `/api/tv` | `{ "target": "netflix" }` | `{ target }` |
 
 ```bash
 curl localhost:3000/api/volume
@@ -101,6 +102,32 @@ moves. Frames are coalesced over a 30 ms window, since one volume change arrives
 A `ping` event goes out every 10 s. That is not only to keep proxies from dropping an idle
 stream — it gives clients something to *miss*, because a proxy can hold the connection open
 after this service dies and the only symptom is silence.
+
+## The television
+
+An LG webOS set, over its local SSAP protocol: JSON on a WebSocket, no cloud and no LG
+account. Node's built-in WebSocket client is enough, so this needs no dependency — a plain
+manifest works for prompt-based pairing, without LG's signed one.
+
+Pair once, with the set on:
+
+```bash
+npm run pair-tv
+```
+
+Accept the prompt with the remote and put the key it prints in `.env` as `TV_CLIENT_KEY`,
+alongside `TV_HOST`. Later connections present that key and pair silently. Leave either
+empty and the TV section simply does not appear.
+
+What the card offers is `src/tv/targets.ts` — edit that list to change the pills. The ids
+came from asking the set itself (`ssap://tv/getExternalInputList` and `listLaunchPoints`),
+and inputs and apps are launched the same way, only the payload differs. Which one is on
+screen comes from a **subscription** to `getForegroundAppInfo`, so the selection follows the
+TV even when you change it with its own remote.
+
+**The set cannot be switched on this way.** With the TV off there is no network stack to
+talk to; that needs Wake-on-LAN and *Mobile TV On* enabled on the set. Until then the card
+shows "Off" and disables itself.
 
 ## Now playing
 

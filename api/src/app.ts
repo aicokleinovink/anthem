@@ -4,12 +4,14 @@ import express, { type NextFunction, type Request, type Response } from 'express
 import { config } from './config.js';
 import type { Receiver } from './device/receiver.js';
 import type { Player } from './player/player.js';
+import type { WebosTv } from './tv/webos.js';
 import { displayRoutes } from './routes/display.js';
 import { eventRoutes } from './routes/events.js';
 import { inputRoutes } from './routes/inputs.js';
 import { playerRoutes } from './routes/player.js';
 import { powerRoutes } from './routes/power.js';
 import { profileRoutes } from './routes/profiles.js';
+import { tvRoutes } from './routes/tv.js';
 import { systemRoutes } from './routes/system.js';
 import { volumeRoutes } from './routes/volume.js';
 
@@ -45,13 +47,14 @@ interface HttpError extends Error {
   details?: unknown;
 }
 
-export function createApp(receiver: Receiver, player: Player): express.Express {
+export function createApp(receiver: Receiver, player: Player, tv: WebosTv): express.Express {
   const app = express();
   app.use(express.json());
 
   app.use(systemRoutes(receiver));
-  app.use('/api', eventRoutes(receiver, player));
+  app.use('/api', eventRoutes(receiver, player, tv));
   app.use('/api', playerRoutes(player));
+  app.use('/api', tvRoutes(tv));
 
   // Zone-scoped routes, plus zone-1 aliases so /api/volume works without a zone.
   for (const mount of ['/api/zones/:zone', '/api']) {

@@ -2,7 +2,7 @@ import { useSlidingPill } from '../hooks/useSlidingPill';
 import { PowerButton } from './PowerButton';
 import styles from './Toolbar.module.css';
 
-export const SECTIONS = ['volume', 'inputs', 'settings'] as const;
+export const SECTIONS = ['volume', 'inputs', 'tv', 'settings'] as const;
 
 export type Section = (typeof SECTIONS)[number];
 
@@ -12,6 +12,7 @@ export const SECTION_PANEL_ID = 'section-panel';
 const LABELS: Record<Section, string> = {
   volume: 'Volume',
   inputs: 'Inputs',
+  tv: 'TV',
   settings: 'Settings',
 };
 

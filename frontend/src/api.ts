@@ -18,6 +18,12 @@ export interface Snapshot {
   display: { info: number | null; options: Array<{ value: number; label: string }> };
   /** What the streamer is playing; null when nothing is loaded. */
   player: NowPlaying | null;
+  tv: {
+    /** False when the TV is off — it cannot be woken over the network. */
+    available: boolean;
+    current: string | null;
+    targets: Array<{ key: string; label: string }>;
+  };
 }
 
 export interface NowPlaying {
@@ -79,6 +85,8 @@ export const stepVolume = (steps: number) =>
 export const selectInput = (input: number) => write('/api/input', { input });
 export const setSpeakerProfile = (profile: number) => write('/api/speaker-profile', { profile });
 export const setDisplay = (info: number) => write('/api/display', { info });
+
+export const selectTvTarget = (target: string) => write('/api/tv', { target });
 
 export const playerAction = (action: PlayerAction) =>
   fetch('/api/player', {
