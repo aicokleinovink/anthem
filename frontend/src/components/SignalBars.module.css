@@ -5,7 +5,7 @@
   gap: 3px;
   height: 15px;
   flex: none;
-  animation: content-in 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: bars-in 320ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .bars i {
@@ -22,6 +22,17 @@
 
 .bars i:nth-child(3) {
   animation-delay: 320ms;
+}
+
+@keyframes bars-in {
+  from {
+    transform: translateY(6px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
 }
 
 @keyframes bar {

@@ -90,6 +90,22 @@
   color: var(--ink);
 }
 
+/*
+ * Defined here, not in global.css: CSS Modules rewrites `animation-name` to the hashed
+ * local name, so referencing a global keyframe from inside a module silently resolves
+ * to nothing and the animation never runs.
+ */
+@keyframes content-in {
+  from {
+    transform: translateY(20px) scale(0.97);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .card,
   .card > * {

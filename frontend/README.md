@@ -177,19 +177,24 @@ dropped under `prefers-reduced-motion`.
 nothing outside the file can see them. Vite handles this natively; no dependency, no
 runtime.
 
-`styles/global.css` is the only global sheet and holds three things that genuinely cannot
-be scoped:
+`styles/global.css` is the only global sheet and holds two things that genuinely cannot
+be scoped: the design tokens (`--ink`, `--card`, `--card-height`, …) with the reset, and the
+two card-entrance keyframes — the *direction* is chosen by the app shell but applied to the
+card, and it travels as `--card-enter`, which CSS Modules leaves alone inside `var()`.
 
-- the design tokens (`--ink`, `--card`, `--card-height`, …) and the reset
-- the shared `content-in` keyframes
-- the two card-entrance keyframes, because the *direction* is chosen by the app shell but
-  applied to the card. The shell sets `--card-enter` on the stage and the card's own module
-  reads it — a keyframe defined inside a module gets a hashed name that another module
-  cannot reference.
+**Every other keyframe belongs inside the module that uses it.** CSS Modules rewrites
+`animation-name` to a hashed local name, so a module referencing a keyframe defined in a
+global sheet resolves to nothing and simply does not animate — silently, with no warning.
+That is how the card's content stagger was lost when the styles were first split up.
 
 Where a component needs to find its own element (the sliding pills measure the active one),
 it queries with the imported class — `container.querySelector('.' + styles.rowActive)` —
-so the hashed name is never written by hand.
+so the hashed name is never written by hand. That measuring lives in
+`hooks/useSlidingPill.ts`, shared by the toolbar and the pickers.
+
+The pill's transition is switched on **one tick after** its first position is applied.
+Otherwise the initial measurement animates the pill from the container's corner into
+place, so every card would slide its pill in on load.
 
 ## Files
 

@@ -28,8 +28,13 @@
 }
 
 /* Only animates once it has been measured — otherwise it slides in from the left on load. */
-.pillReady {
+/* Visible once measured. The transition arrives a tick later, so the first
+   position is applied instantly rather than animated from the corner. */
+.visible {
   opacity: 1;
+}
+
+.animated {
   transition:
     transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
     width 420ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -65,7 +70,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pillReady {
+  .animated {
     transition: none;
   }
 }

@@ -25,8 +25,13 @@
   opacity: 0;
 }
 
-.pillReady {
+/* Visible once measured. The transition arrives a tick later, so the first
+   position is applied instantly rather than animated from the corner. */
+.visible {
   opacity: 1;
+}
+
+.animated {
   transition:
     transform 460ms cubic-bezier(0.2, 1.16, 0.32, 1),
     height 460ms cubic-bezier(0.2, 1.16, 0.32, 1);
@@ -103,7 +108,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pillReady {
+  .animated {
     transition: none;
   }
 }

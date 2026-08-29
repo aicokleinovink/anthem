@@ -1,4 +1,5 @@
-import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import { useSlidingPill } from '../hooks/useSlidingPill';
 import styles from './PillList.module.css';
 
 export interface PillItem {
@@ -35,23 +36,7 @@ export function PillList({
   emptyLabel = 'Nothing to show',
   onSelect,
 }: PillListProps) {
-  const list = useRef<HTMLDivElement>(null);
-  const [pill, setPill] = useState<{ y: number; height: number } | null>(null);
-
-  useLayoutEffect(() => {
-    const container = list.current;
-    if (!container) return;
-
-    const measure = () => {
-      const active = container.querySelector<HTMLElement>(`.${styles.rowActive}`);
-      setPill(active ? { y: active.offsetTop, height: active.offsetHeight } : null);
-    };
-
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, [selected, items.length]);
+  const { ref, pill, animated } = useSlidingPill('y', styles.rowActive, [selected, items.length]);
 
   const className = [
     styles.picker,
@@ -71,10 +56,10 @@ export function PillList({
   }
 
   return (
-    <div className={className} ref={list}>
+    <div className={className} ref={ref}>
       <span
-        className={`${styles.pill} ${pill ? styles.pillReady : ''}`}
-        style={pill ? { transform: `translateY(${pill.y}px)`, height: pill.height } : undefined}
+        className={`${styles.pill} ${pill ? styles.visible : ''} ${animated ? styles.animated : ''}`}
+        style={pill ? { transform: `translateY(${pill.start}px)`, height: pill.size } : undefined}
         aria-hidden="true"
       />
 

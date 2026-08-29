@@ -44,8 +44,11 @@ body {
 /*
  * Card entrance. These live here, unscoped, because the direction is chosen by the app
  * shell but applied to the card: the shell sets --card-enter, and the card's own module
- * reads it. A keyframe name defined inside a CSS module is hashed and could not be
- * referenced from another one.
+ * reads it through var(), which CSS Modules leaves alone.
+ *
+ * Every other keyframe belongs inside the module that uses it. CSS Modules rewrites
+ * `animation-name` to a hashed local name, so a module referencing a keyframe defined
+ * out here resolves to nothing and simply does not animate.
  */
 @keyframes card-in-right {
   from {
@@ -68,18 +71,6 @@ body {
   }
   45% {
     opacity: 1;
-  }
-  to {
-    transform: none;
-    opacity: 1;
-  }
-}
-
-/* Used by the card's contents and by the signal bars as they appear. */
-@keyframes content-in {
-  from {
-    transform: translateY(20px) scale(0.97);
-    opacity: 0;
   }
   to {
     transform: none;

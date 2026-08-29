@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useSlidingPill } from '../hooks/useSlidingPill';
 import { PowerButton } from './PowerButton';
 import styles from './Toolbar.module.css';
 
@@ -32,36 +32,18 @@ export function Toolbar({
   offline,
   onTogglePower,
 }: ToolbarProps) {
-  const tabs = useRef<HTMLDivElement>(null);
-  const [pill, setPill] = useState<{ x: number; width: number } | null>(null);
-
-  /*
-   * The selected pill is one element that slides between tabs rather than a background
-   * on each tab, so the move can be animated. Its position is measured from the active
-   * tab: label widths differ, and a ResizeObserver keeps it right when the layout changes.
-   */
-  useLayoutEffect(() => {
-    const container = tabs.current;
-    if (!container) return;
-
-    const measure = () => {
-      const active = container.querySelector<HTMLElement>(`.${styles.tabActive}`);
-      if (active) setPill({ x: active.offsetLeft, width: active.offsetWidth });
-    };
-
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(container);
-    return () => observer.disconnect();
-  }, [section]);
+  // One pill that slides between tabs, rather than a background on each tab, so the
+  // move can be animated. Label widths differ, so it is measured from the active tab.
+  const { ref, pill, animated } = useSlidingPill('x', styles.tabActive, [section]);
 
   return (
     <nav className={styles.toolbar} aria-label="Receiver controls">
-      <div className={styles.tabs} role="tablist" ref={tabs}>
-        {/* Hidden until measured, so it fades in at the right tab instead of sliding in from the left. */}
+      <div className={styles.tabs} role="tablist" ref={ref}>
+        {/* Hidden until measured, and only animated after that: on load it appears at
+            the right tab rather than sliding in from the left. */}
         <span
-          className={`${styles.pill} ${pill ? styles.pillReady : ''}`}
-          style={pill ? { transform: `translateX(${pill.x}px)`, width: pill.width } : undefined}
+          className={`${styles.pill} ${pill ? styles.visible : ''} ${animated ? styles.animated : ''}`}
+          style={pill ? { transform: `translateX(${pill.start}px)`, width: pill.size } : undefined}
           aria-hidden="true"
         />
 
