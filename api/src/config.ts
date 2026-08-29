@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 const num = (value: string | undefined, fallback: number): number => {
   if (value === undefined || value.trim() === '') return fallback;
   const parsed = Number(value);
@@ -30,6 +32,14 @@ export const config = {
 
   minVolumeDb: MIN_VOLUME_DB,
   deviceMaxVolumeDb: DEVICE_MAX_VOLUME_DB,
+
+  /**
+   * Built frontend to serve alongside the API, so one process on one port is the whole
+   * app. Resolved from the working directory rather than from this file's location:
+   * after `tsc` the compiled file sits a level deeper and a relative hop would miss.
+   * Serving is skipped entirely when the directory does not exist.
+   */
+  frontendDir: process.env.FRONTEND_DIR ?? path.resolve(process.cwd(), '../frontend/dist'),
 
   /** How long to wait for the receiver to answer a command. */
   commandTimeoutMs: 3000,

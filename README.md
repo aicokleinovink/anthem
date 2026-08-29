@@ -18,17 +18,24 @@ the protocol, and those are written down where they bite — see
 
 ## Run it
 
-```bash
-cd api && npm install && cp .env.example .env   # ANTHEM_HOST defaults to 192.168.2.3
-npm run dev
-```
+**One process, one port** — the API serves the built UI:
 
 ```bash
-cd frontend && npm install && npm run dev
+cd frontend && npm install && npm run build
+cd ../api && npm install && cp .env.example .env   # ANTHEM_HOST defaults to 192.168.2.3
+npm run build && npm start
 ```
 
-Open the Vite URL. For your phone: `npm run dev -- --host`, browse to
-`http://<your-machine>:5173`, then Add to Home Screen.
+Open `http://localhost:3000`. From your phone, use the machine's LAN address —
+`http://<your-machine>:3000` — then Add to Home Screen.
+
+**While developing**, run the two separately so the UI hot-reloads. Vite serves the app and
+proxies `/api` to the service, which then skips serving any build it finds:
+
+```bash
+cd api && npm run dev
+cd frontend && npm run dev
+```
 
 The receiver needs **standby IP control enabled**, or it will not answer while it is off —
 which also means power-on over IP will not work.
@@ -63,3 +70,11 @@ cd api && npm test          # protocol parsing, command building, state cache, t
 
 They run without hardware. `npm run probe` in `api/` replays every read-only query against
 the real receiver and prints what comes back.
+
+## Notes
+
+- Give the receiver a **DHCP reservation** on your router. Its address is configured in one
+  place, but if it ever changes nothing will work and the reason will not be obvious.
+- Don't expose the API to the internet — it has no authentication. For access from outside
+  the house, use Tailscale, which also provides a real HTTPS certificate that a plain LAN
+  address cannot.

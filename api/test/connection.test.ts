@@ -87,9 +87,15 @@ test('unsolicited pushes are emitted as messages', async () => {
   await once(connection, 'connected');
 
   await connection.send('Z1POW?;', (m) => m.kind === 'zone' && m.key === 'POW');
-  await once(connection, 'message'); // the pushed VOL frame
 
-  assert.ok(seen.some((m) => m.kind === 'zone' && m.key === 'VOL' && m.value === '-70.5'));
+  // Wait for it to turn up in what we collected, rather than for the next event: both
+  // frames can arrive in one TCP chunk, in which case the push has already been emitted
+  // by the time the send resolves and waiting for another event would never return.
+  const pushed = () => seen.some((m) => m.kind === 'zone' && m.key === 'VOL' && m.value === '-70.5');
+  for (let attempt = 0; attempt < 50 && !pushed(); attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  assert.ok(pushed(), 'the unsolicited VOL frame should have been emitted');
 
   connection.close();
   await server.close();

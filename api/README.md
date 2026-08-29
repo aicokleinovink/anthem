@@ -24,6 +24,17 @@ npm test                  # unit tests, no hardware needed
 The receiver must have **standby IP control enabled**, or it will not answer while it is
 off — which also means power-on over IP will not work.
 
+## Serving the UI
+
+If `../frontend/dist` exists, the service also serves it: static assets with a long
+immutable cache (Vite fingerprints their filenames), and `index.html` for any other GET so
+deep links work. That makes the whole thing one process on one port. With no build present
+it logs that and serves the API alone, which is the normal case in development.
+
+`FRONTEND_DIR` overrides the location. The default is resolved from the working directory
+rather than from the source file, because after `tsc` the compiled file sits a directory
+deeper and a relative hop from it would miss.
+
 ## Endpoints
 
 `:zone` is `1` or `2`. The `/api/...` forms without a zone are aliases for zone 1.
