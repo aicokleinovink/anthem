@@ -119,6 +119,10 @@ locally by the client and re-synced whenever an update does arrive.
 
 Transport goes to the Node's `/Play`, `/Pause`, `/Skip` and `/Back`.
 
+`connecting` — what the Node reports between tracks — is mapped to a `loading` state rather
+than to `stopped`. Treating it as stopped makes the player vanish and reappear on every
+skip.
+
 ## Speaker profiles
 
 Speaker profile is a **per-input** setting — the same thing as Setup > Inputs > *input* >

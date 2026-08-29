@@ -125,6 +125,12 @@ long-poll can sit for a minute with the track advancing quietly behind it.
 Artwork is loaded from whatever URL the streamer gives (a service CDN, or the Node itself
 for local files), and falls back to a muted glyph if the image fails.
 
+**It stays put across a skip.** Between tracks the streamer reports `connecting` and, for a
+moment, nothing at all — so the player used to blink out and back on every skip, replaying
+its entrance. Two things prevent that: `connecting` is treated as a track change rather than
+a stop, and `hooks/useSustained.ts` holds the last track for a few seconds when the streamer
+goes quiet.
+
 ## Settings
 
 Two settings, each in its own thin-outlined panel so they read as separate things rather

@@ -6,6 +6,7 @@ import { VolumeCard } from './cards/VolumeCard';
 import { MiniPlayer } from './components/MiniPlayer';
 import { SECTIONS, SECTION_PANEL_ID, Toolbar, type Section } from './components/Toolbar';
 import { useReceiver } from './hooks/useReceiver';
+import { useSustained } from './hooks/useSustained';
 import { useVolume } from './hooks/useVolume';
 import styles from './App.module.css';
 
@@ -14,6 +15,9 @@ import styles from './App.module.css';
  * named still come back as "Profile3", "Profile4" and are noise in a picker.
  */
 const UNNAMED = /^Profile\d+$/;
+
+/** How long the mini player stays put while the streamer moves between tracks. */
+const PLAYER_HOLD_MS = 4000;
 
 export default function App() {
   const [section, setSection] = useState<Section>('volume');
@@ -25,6 +29,10 @@ export default function App() {
   const { snapshot, offline, busy, write } = receiver;
 
   const power = snapshot?.power ?? null;
+
+  // Skipping leaves a gap where the streamer reports nothing; hold the player through it
+  // rather than letting it blink out and back.
+  const playing = useSustained(snapshot?.player ?? null, PLAYER_HOLD_MS);
 
   const togglePower = () => {
     if (!snapshot || power === null) return;
@@ -123,7 +131,7 @@ export default function App() {
         </div>
 
         {/* Sits below whichever card is showing, for as long as something is playing. */}
-        {snapshot?.player && <MiniPlayer now={snapshot.player} offline={offline} />}
+        {playing && <MiniPlayer now={playing} offline={offline} />}
       </div>
     </main>
   );

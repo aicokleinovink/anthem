@@ -37,6 +37,7 @@ export function MiniPlayer({ now, offline }: MiniPlayerProps) {
   useEffect(() => setArtworkFailed(false), [now.image]);
 
   const playing = now.state === 'playing';
+  const loading = now.state === 'loading';
   const fraction = now.duration ? Math.min(elapsed / now.duration, 1) : 0;
 
   const send = (action: PlayerAction) => {
@@ -46,7 +47,7 @@ export function MiniPlayer({ now, offline }: MiniPlayerProps) {
   };
 
   return (
-    <section className={styles.player} aria-label="Now playing">
+    <section className={`${styles.player} ${loading ? styles.loading : ''}`} aria-label="Now playing">
       <div className={styles.top}>
       {now.image && !artworkFailed ? (
         <img
@@ -57,7 +58,7 @@ export function MiniPlayer({ now, offline }: MiniPlayerProps) {
         />
       ) : (
         <div className={`${styles.art} ${styles.artFallback}`} aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
             <path d="M9 18V5l10-2v13" />
             <circle cx="6.5" cy="18" r="2.5" />
             <circle cx="16.5" cy="16" r="2.5" />
@@ -78,8 +79,8 @@ export function MiniPlayer({ now, offline }: MiniPlayerProps) {
           aria-label="Previous track"
           onClick={() => send('previous')}
         >
-          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-            <path d="M7 6h2v12H7zM20 6v12l-9-6z" />
+          <svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true">
+            <path d="M7 6h2.2v12H7zM20 6v12l-9.2-6z" />
           </svg>
         </button>
 
@@ -91,12 +92,12 @@ export function MiniPlayer({ now, offline }: MiniPlayerProps) {
           onClick={() => send(playing ? 'pause' : 'play')}
         >
           {playing ? (
-            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-              <path d="M8 5h3v14H8zM13 5h3v14h-3z" />
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              <path d="M8 5h3.1v14H8zM12.9 5H16v14h-3.1z" />
             </svg>
           ) : (
-            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-              <path d="M8 5l11 7-11 7z" />
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              <path d="M8.5 5l11 7-11 7z" />
             </svg>
           )}
         </button>
@@ -108,8 +109,8 @@ export function MiniPlayer({ now, offline }: MiniPlayerProps) {
           aria-label="Next track"
           onClick={() => send('next')}
         >
-          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-            <path d="M15 6h2v12h-2zM4 6l9 6-9 6z" />
+          <svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true">
+            <path d="M14.8 6H17v12h-2.2zM4 6l9.2 6L4 18z" />
           </svg>
         </button>
       </div>

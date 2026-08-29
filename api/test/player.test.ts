@@ -32,7 +32,7 @@ test('maps the states we care about', () => {
   assert.equal(state('stream'), 'playing');
   assert.equal(state('pause'), 'paused');
   assert.equal(state('stop'), 'stopped');
-  assert.equal(state('connecting'), 'stopped');
+  assert.equal(state('connecting'), 'loading');
 });
 
 test('makes a relative artwork path absolute', () => {
@@ -56,4 +56,11 @@ test('falls back to title2/title3 when artist and album are absent', () => {
   );
   assert.equal(now.artist, 'Someone');
   assert.equal(now.album, 'Somewhere');
+});
+
+test('connecting is a track change, not a stop', () => {
+  // The Node reports this between tracks; treating it as stopped makes the player
+  // vanish and come back every time you skip.
+  const { now } = parseStatus('<status><state>connecting</state></status>', BASE);
+  assert.equal(now.state, 'loading');
 });

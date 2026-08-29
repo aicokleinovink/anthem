@@ -21,7 +21,7 @@ export interface Snapshot {
 }
 
 export interface NowPlaying {
-  state: 'playing' | 'paused' | 'stopped';
+  state: 'playing' | 'paused' | 'loading' | 'stopped';
   title: string | null;
   artist: string | null;
   album: string | null;

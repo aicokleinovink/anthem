@@ -1,10 +1,10 @@
-/* Same surface as the toolbar: a white rounded bar, one step smaller than a card. */
+/* Same surface as the toolbar and cards: white, deeply rounded, floating on the dark. */
 .player {
   position: relative;
   display: grid;
-  gap: 9px;
-  padding: 9px 14px 11px 9px;
-  border-radius: 24px;
+  gap: 12px;
+  padding: 12px 14px 15px 12px;
+  border-radius: 28px;
   background: var(--card);
   color: var(--ink);
   box-shadow: 0 18px 44px rgb(0 0 0 / 35%);
@@ -18,12 +18,14 @@
 }
 
 .art {
-  width: 46px;
-  height: 46px;
+  width: 52px;
+  height: 52px;
   flex: none;
-  border-radius: 16px;
+  border-radius: 17px;
   background: var(--track);
   object-fit: cover;
+  /* Keeps pale artwork from dissolving into the card. */
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 7%);
 }
 
 /* Stands in while the artwork loads, or when a source provides none. */
@@ -35,7 +37,7 @@
 
 .text {
   display: grid;
-  gap: 2px;
+  gap: 3px;
   /* Without this a long title stops the flex item from ever shrinking. */
   min-width: 0;
   flex: 1;
@@ -49,55 +51,32 @@
 }
 
 .title {
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
 }
 
 /* Its own line, so a long artist is not fighting the clock for room. */
 .artist {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 500;
 }
 
-/* Progress gets its own row: the times sit at the ends, the bar spans the rest. */
-.progressRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 2px 0 5px;
-}
-
-.time {
-  flex: none;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-}
-
-.bar {
-  position: relative;
-  flex: 1;
-  height: 3px;
-  border-radius: 2px;
-  background: var(--track);
-  overflow: hidden;
-}
-
+/* Tight together: every pixel spent here is one the title loses. */
 .controls {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
   flex: none;
+  margin-right: -4px;
 }
 
 .skip {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -105,14 +84,16 @@
   color: var(--ink);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 140ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition:
+    background 180ms ease,
+    transform 140ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .play {
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  width: 46px;
+  height: 46px;
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -121,6 +102,10 @@
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: transform 140ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.skip:hover:not(:disabled) {
+  background: var(--track);
 }
 
 .skip:active:not(:disabled),
@@ -144,12 +129,42 @@
   fill: currentColor;
 }
 
+/* Progress gets its own row: the times sit at the ends, the bar spans the rest. */
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 4px 0 8px;
+}
+
+.time {
+  flex: none;
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.bar {
+  position: relative;
+  flex: 1;
+  height: 4px;
+  border-radius: 3px;
+  background: var(--track);
+  overflow: hidden;
+}
+
 .progress {
   position: absolute;
   inset: 0 auto 0 0;
-  border-radius: 2px;
+  border-radius: 3px;
   background: var(--ink);
   transition: width 900ms linear;
+}
+
+/* Between tracks: keep the bar in place rather than snapping it back to nothing. */
+.loading .progress {
+  background: var(--muted);
 }
 
 @keyframes player-in {

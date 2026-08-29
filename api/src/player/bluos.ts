@@ -7,7 +7,7 @@
  * radio, Airplay, local files.
  */
 
-export type PlayerState = 'playing' | 'paused' | 'stopped';
+export type PlayerState = 'playing' | 'paused' | 'loading' | 'stopped';
 
 export interface NowPlaying {
   state: PlayerState;
@@ -62,9 +62,16 @@ export function parseStatus(xml: string, baseUrl: string): { now: NowPlaying; et
 
   const etag = /<status[^>]*\betag="([^"]+)"/.exec(xml)?.[1] ?? null;
   const raw = values.state ?? 'stop';
-  // BluOS reports 'stream' for services like Spotify Connect, 'play' for local playback.
+  // BluOS reports 'stream' for services like Spotify Connect, 'play' for local playback,
+  // and 'connecting' for the moment between tracks — which is emphatically not stopped.
   const state: PlayerState =
-    raw === 'play' || raw === 'stream' ? 'playing' : raw === 'pause' ? 'paused' : 'stopped';
+    raw === 'play' || raw === 'stream'
+      ? 'playing'
+      : raw === 'pause'
+        ? 'paused'
+        : raw === 'connecting'
+          ? 'loading'
+          : 'stopped';
 
   const number = (value: string | undefined): number | null => {
     if (value === undefined) return null;
