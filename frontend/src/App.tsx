@@ -3,6 +3,7 @@ import { selectInput, setDisplay, setPower, setSpeakerProfile } from './api';
 import { InputsCard } from './cards/InputsCard';
 import { SettingsCard } from './cards/SettingsCard';
 import { VolumeCard } from './cards/VolumeCard';
+import { MiniPlayer } from './components/MiniPlayer';
 import { SECTIONS, SECTION_PANEL_ID, Toolbar, type Section } from './components/Toolbar';
 import { useReceiver } from './hooks/useReceiver';
 import { useVolume } from './hooks/useVolume';
@@ -120,6 +121,9 @@ export default function App() {
             />
           )}
         </div>
+
+        {/* Sits below whichever card is showing, for as long as something is playing. */}
+        {snapshot?.player && <MiniPlayer now={snapshot.player} offline={offline} />}
       </div>
     </main>
   );

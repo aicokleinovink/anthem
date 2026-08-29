@@ -1,4 +1,5 @@
 import { config } from '../config.js';
+import type { NowPlaying } from '../player/bluos.js';
 import type { Zone } from '../protocol/commands.js';
 import { dbToPercent } from './volume.js';
 import type { ReceiverState } from './state.js';
@@ -25,6 +26,8 @@ export interface Snapshot {
     inputName: string | null;
   };
   display: { info: number | null; options: Array<{ value: number; label: string }> };
+  /** What the streamer is playing, or null when there is no streamer or nothing loaded. */
+  player: NowPlaying | null;
 }
 
 /** Labels for the front panel setting; the receiver reports only the number. */
@@ -36,7 +39,11 @@ export const DISPLAY_OPTIONS = [
 /** The receiver has four speaker-profile slots, named or not. */
 const PROFILE_SLOTS = 4;
 
-export function snapshot(state: ReceiverState, zone: Zone = 1): Snapshot {
+export function snapshot(
+  state: ReceiverState,
+  player: NowPlaying | null = null,
+  zone: Zone = 1,
+): Snapshot {
   const zoneState = state.zones[zone];
   const db = zoneState.volumeDb ?? null;
   const selected = zoneState.input ?? null;
@@ -69,5 +76,7 @@ export function snapshot(state: ReceiverState, zone: Zone = 1): Snapshot {
       inputName: selected === null ? null : (state.inputNames[selected] ?? null),
     },
     display: { info: state.frontPanelInfo ?? null, options: DISPLAY_OPTIONS },
+    // Stopped is the same as nothing playing as far as the UI is concerned.
+    player: player === null || player.state === 'stopped' ? null : player,
   };
 }

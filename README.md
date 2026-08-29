@@ -48,6 +48,7 @@ which also means power-on over IP will not work.
 | **Inputs** | The real source list with your names, and moving bars on the one that is playing |
 | **Settings** | Speaker profile (per input) and front panel displayed info |
 | **Power** | On/off from the toolbar, with a standby state the cards respect |
+| **Now playing** | A mini player under every card: artwork, track, position, and skip controls |
 
 Every reading comes from the receiver and every write is confirmed by it — nothing in the
 UI is an echo of what was requested.
@@ -64,6 +65,9 @@ UI is an echo of what was requested.
 - **The receiver pushes every change to every connected client**, so the UI reads a single
   event stream and never polls. Change the volume on the remote and the dial moves within
   about 50 ms.
+- **Now-playing information does not come from the receiver** — it cannot know what is
+  playing. It comes from the streamer feeding it (a Bluesound Node), over that device's own
+  local API. ([details](api/README.md#now-playing))
 
 ## Tests
 

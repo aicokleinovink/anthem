@@ -112,6 +112,19 @@ The header shows the format of the signal actually arriving (`Dolby D+`, `2.0 PC
 They are hidden entirely when there is no signal — as a static trio they read as an
 ellipsis rather than as an indicator.
 
+## The mini player
+
+A bar below the card, visible whenever the streamer has something loaded and gone when it
+does not — with the same gap to the card as the toolbar has above it. Artwork, track,
+artist, elapsed and total time, a progress line, and previous / play-pause / next.
+
+The position **counts locally and re-syncs on every update**. The streamer's status only
+changes when something actually happens, so it does not report each passing second; a
+long-poll can sit for a minute with the track advancing quietly behind it.
+
+Artwork is loaded from whatever URL the streamer gives (a service CDN, or the Node itself
+for local files), and falls back to a muted glyph if the image fails.
+
 ## Settings
 
 Two settings, each in its own thin-outlined panel so they read as separate things rather

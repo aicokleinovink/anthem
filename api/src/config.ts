@@ -19,6 +19,13 @@ export const config = {
   host: process.env.ANTHEM_HOST ?? '192.168.2.3',
   port: num(process.env.ANTHEM_PORT, 14999),
 
+  /**
+   * The BluOS streamer feeding the receiver, for now-playing information and transport
+   * controls. The receiver cannot tell you what is playing — audio just arrives on an
+   * input — so this comes from the streamer's own local API. Empty disables the player.
+   */
+  playerUrl: process.env.PLAYER_URL ?? 'http://192.168.2.15:11000',
+
   /** HTTP port for this API. */
   httpPort: num(process.env.PORT, 3000),
 

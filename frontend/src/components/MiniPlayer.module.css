@@ -1,0 +1,172 @@
+/* Same surface as the toolbar: a white rounded bar, one step smaller than a card. */
+.player {
+  position: relative;
+  display: grid;
+  gap: 9px;
+  padding: 9px 14px 11px 9px;
+  border-radius: 24px;
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 18px 44px rgb(0 0 0 / 35%);
+  animation: player-in 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.art {
+  width: 46px;
+  height: 46px;
+  flex: none;
+  border-radius: 16px;
+  background: var(--track);
+  object-fit: cover;
+}
+
+/* Stands in while the artwork loads, or when a source provides none. */
+.artFallback {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+
+.text {
+  display: grid;
+  gap: 2px;
+  /* Without this a long title stops the flex item from ever shrinking. */
+  min-width: 0;
+  flex: 1;
+}
+
+.title,
+.artist {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Its own line, so a long artist is not fighting the clock for room. */
+.artist {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Progress gets its own row: the times sit at the ends, the bar spans the rest. */
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 2px 0 5px;
+}
+
+.time {
+  flex: none;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.bar {
+  position: relative;
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--track);
+  overflow: hidden;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+}
+
+.skip {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 140ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.play {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--card);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 140ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.skip:active:not(:disabled),
+.play:active:not(:disabled) {
+  transform: scale(0.9);
+}
+
+.skip:disabled,
+.play:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.skip:focus-visible,
+.play:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.controls svg {
+  fill: currentColor;
+}
+
+.progress {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 2px;
+  background: var(--ink);
+  transition: width 900ms linear;
+}
+
+@keyframes player-in {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player,
+  .progress {
+    animation: none;
+    transition: none;
+  }
+}

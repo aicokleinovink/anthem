@@ -56,6 +56,7 @@ deeper and a relative hop from it would miss.
 | PUT | `/api/zones/:zone/speaker-profile` | `{ "profile": 1 }` (optionally `"input"`) | `{ input, selected }` |
 | GET | `/api/display` | | `{ info, options }` |
 | GET | `/api/events` | | Server-sent events: the whole state, on connect and on every change |
+| POST | `/api/player` | `{ "action": "play" \| "pause" \| "next" \| "previous" }` | `{ action }` |
 | PUT | `/api/display` | `{ "info": 0 }` | `{ info, options }` |
 
 ```bash
@@ -100,6 +101,23 @@ moves. Frames are coalesced over a 30 ms window, since one volume change arrives
 A `ping` event goes out every 10 s. That is not only to keep proxies from dropping an idle
 stream — it gives clients something to *miss*, because a proxy can hold the connection open
 after this service dies and the only symptom is silence.
+
+## Now playing
+
+The receiver has no idea what is playing — audio just arrives on an input — so the track,
+artwork and position come from the **streamer**, not from the receiver. Here that is a
+Bluesound Node, whose local HTTP API on port 11000 needs no authentication and reports
+whatever it is playing: Spotify, Tidal, radio, Airplay, local files.
+
+`PLAYER_URL` points at it (empty disables the player entirely). The service follows it with
+BluOS long-polling — `GET /Status?timeout=60&etag=…` holds the request open until something
+changes — and folds the result into the same snapshot the event stream sends.
+
+One catch worth knowing: **the etag does not change as the position advances.** A long-poll
+can sit for a minute while the track quietly plays on, so the elapsed time has to be counted
+locally by the client and re-synced whenever an update does arrive.
+
+Transport goes to the Node's `/Play`, `/Pause`, `/Skip` and `/Back`.
 
 ## Speaker profiles
 

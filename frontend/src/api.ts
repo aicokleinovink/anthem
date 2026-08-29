@@ -16,7 +16,23 @@ export interface Snapshot {
     inputName: string | null;
   };
   display: { info: number | null; options: Array<{ value: number; label: string }> };
+  /** What the streamer is playing; null when nothing is loaded. */
+  player: NowPlaying | null;
 }
+
+export interface NowPlaying {
+  state: 'playing' | 'paused' | 'stopped';
+  title: string | null;
+  artist: string | null;
+  album: string | null;
+  image: string | null;
+  service: string | null;
+  /** Seconds into the track, and its length — absent for live radio. */
+  elapsed: number | null;
+  duration: number | null;
+}
+
+export type PlayerAction = 'play' | 'pause' | 'next' | 'previous';
 
 /**
  * The receiver's full volume range, in dB. Its own percent scale is exactly
@@ -63,3 +79,12 @@ export const stepVolume = (steps: number) =>
 export const selectInput = (input: number) => write('/api/input', { input });
 export const setSpeakerProfile = (profile: number) => write('/api/speaker-profile', { profile });
 export const setDisplay = (info: number) => write('/api/display', { info });
+
+export const playerAction = (action: PlayerAction) =>
+  fetch('/api/player', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ action }),
+  }).then((response) => {
+    if (!response.ok) throw new ApiError(response.statusText, response.status);
+  });
