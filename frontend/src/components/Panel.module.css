@@ -1,0 +1,31 @@
+/*
+ * A setting and its options, inside a thin outline — the same rounded-container
+ * language as the cards themselves, one step quieter.
+ *
+ * Auto margins absorb the leftover height, centring the panels between the header and
+ * the bottom of the card instead of pooling all the space underneath them.
+ */
+.panel:first-of-type {
+  margin-top: auto;
+}
+
+.panel:last-of-type {
+  margin-bottom: auto;
+}
+
+.panel {
+  margin-top: 14px;
+  padding: 12px 10px;
+  border: 1px solid var(--track);
+  border-radius: 30px;
+}
+
+.title {
+  margin: 4px 0 2px;
+  padding: 0 14px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}

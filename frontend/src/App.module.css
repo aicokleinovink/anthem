@@ -1,0 +1,26 @@
+.screen {
+  display: grid;
+  place-items: center;
+  min-height: 100%;
+  padding: 24px;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+}
+
+/* Toolbar and card are separate surfaces with air between them. */
+.shell {
+  display: grid;
+  gap: 14px;
+  width: min(360px, 100%);
+}
+
+/* Wrapper for the active card, so the tabs have a panel to point at. */
+.stage {
+  display: grid;
+  min-width: 0;
+  /* Read by the card's own module: cards enter from the side you moved towards. */
+  --card-enter: card-in-right;
+}
+
+.stageLeft {
+  --card-enter: card-in-left;
+}

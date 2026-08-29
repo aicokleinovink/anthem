@@ -1,4 +1,5 @@
 import { Card } from '../components/Card';
+import { Panel } from '../components/Panel';
 import { PillList } from '../components/PillList';
 import { SignalBars } from '../components/SignalBars';
 import type { InputsController } from '../hooks/useInputs';
@@ -24,27 +25,22 @@ export function InputsCard({ controller, powerOn, offline }: InputsCardProps) {
       dimmed={locked}
     >
       {/* Same outlined panel as the settings card, so the two read as one system. */}
-      <section className="panel">
-        <h2 className="panel__title">Select Input</h2>
-
-        {inputs.length === 0 ? (
-          <div className="card__empty">Reading inputs…</div>
-        ) : (
-          <PillList
-            items={inputs.map((option) => ({
-              key: option.input,
-              label: option.name,
-              // Only the playing source gets bars, and only while a signal is arriving.
-              trailing: live ? <SignalBars /> : undefined,
-            }))}
-            selected={selected}
-            disabled={locked}
-            align="top"
-            compact
-            onSelect={(key) => select(Number(key))}
-          />
-        )}
-      </section>
+      <Panel title="Select Input">
+        <PillList
+          items={inputs.map((option) => ({
+            key: option.input,
+            label: option.name,
+            // Only the playing source gets bars, and only while a signal is arriving.
+            trailing: live ? <SignalBars /> : undefined,
+          }))}
+          selected={selected}
+          disabled={locked}
+          align="top"
+          compact
+          emptyLabel="Reading inputs…"
+          onSelect={(key) => select(Number(key))}
+        />
+      </Panel>
     </Card>
   );
 }

@@ -1,4 +1,5 @@
 import type { Ripple } from '../hooks/useRipples';
+import styles from './VolumeDial.module.css';
 
 const SIZE = 268;
 const STROKE = 14;
@@ -25,12 +26,15 @@ export function VolumeDial({ fraction, label, caption, dimmed, ripples }: Volume
   const hasArc = filled > 0.5;
 
   return (
-    <div className={`dial ${dimmed ? 'dial--dimmed' : ''}`}>
-      <div className="dial__ripples" aria-hidden="true">
+    <div className={`${styles.dial} ${dimmed ? styles.dimmed : ''}`}>
+      <div className={styles.ripples} aria-hidden="true">
         {ripples.map((ripple) => (
-          <span key={ripple.id} className={`ripple ripple--${ripple.direction}`}>
-            <span className="ripple__ring" />
-            <span className="ripple__ring ripple__ring--trail" />
+          <span
+            key={ripple.id}
+            className={`${styles.ripple} ${ripple.direction === 'up' ? styles.up : styles.down}`}
+          >
+            <span className={styles.ring} />
+            <span className={`${styles.ring} ${styles.trail}`} />
           </span>
         ))}
       </div>
@@ -38,7 +42,7 @@ export function VolumeDial({ fraction, label, caption, dimmed, ripples }: Volume
       <svg viewBox={`0 0 ${SIZE} ${SIZE}`} width={SIZE} height={SIZE} aria-hidden="true">
         <g transform={`rotate(${START_ANGLE} ${SIZE / 2} ${SIZE / 2})`}>
           <circle
-            className="dial__track"
+            className={styles.track}
             cx={SIZE / 2}
             cy={SIZE / 2}
             r={RADIUS}
@@ -47,7 +51,7 @@ export function VolumeDial({ fraction, label, caption, dimmed, ripples }: Volume
           />
           {hasArc && (
             <circle
-              className="dial__progress"
+              className={styles.progress}
               cx={SIZE / 2}
               cy={SIZE / 2}
               r={RADIUS}
@@ -58,12 +62,12 @@ export function VolumeDial({ fraction, label, caption, dimmed, ripples }: Volume
         </g>
       </svg>
 
-      <div className="dial__readout">
+      <div className={styles.readout}>
         {/* Keyed on the value so the pop animation replays on every change. */}
-        <span className="dial__value" key={label}>
+        <span className={styles.value} key={label}>
           {label}
         </span>
-        <span className="dial__caption">{caption}</span>
+        <span className={styles.caption}>{caption}</span>
       </div>
     </div>
   );

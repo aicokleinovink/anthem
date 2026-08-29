@@ -1,0 +1,42 @@
+/* Three bars on the selected source, shown only while a signal is arriving. */
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 15px;
+  flex: none;
+  animation: content-in 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bars i {
+  width: 2.5px;
+  height: 3px;
+  border-radius: 2px;
+  background: currentColor;
+  animation: bar 780ms ease-in-out infinite alternate;
+}
+
+.bars i:nth-child(2) {
+  animation-delay: 160ms;
+}
+
+.bars i:nth-child(3) {
+  animation-delay: 320ms;
+}
+
+@keyframes bar {
+  from {
+    height: 3px;
+  }
+  to {
+    height: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bars,
+  .bars i {
+    animation: none;
+    height: 9px;
+  }
+}

@@ -1,0 +1,162 @@
+.dial {
+  position: relative;
+  display: grid;
+  place-items: center;
+  /* No bottom margin: the card is a flex column, so it would add to the controls'
+     top margin instead of collapsing with it. */
+  margin: 18px 0 0;
+}
+
+.dial svg {
+  width: 100%;
+  height: auto;
+  max-width: 268px;
+}
+
+.track {
+  fill: none;
+  stroke: var(--track);
+  stroke-linecap: round;
+}
+
+.progress {
+  fill: none;
+  stroke: var(--ink);
+  stroke-linecap: round;
+  /* The arc grows by extending its dash, so this animates the level change. */
+  transition: stroke-dasharray 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dimmed .progress {
+  stroke: var(--muted);
+}
+
+.readout {
+  position: absolute;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+
+.value {
+  animation: value-pop 300ms cubic-bezier(0.22, 1, 0.36, 1);
+  font-size: 56px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.caption {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes value-pop {
+  from {
+    transform: scale(0.94);
+    opacity: 0.55;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* --- press ripples --- */
+
+.ripples {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  /*
+   * Behind everything in the card but still above its background. Without this the
+   * rings are positioned and the buttons are not, so the rings paint over them.
+   */
+  z-index: -1;
+}
+
+.ripple {
+  position: absolute;
+  width: 100%;
+  max-width: 268px;
+  aspect-ratio: 1;
+}
+
+.ring {
+  position: absolute;
+  inset: 0;
+  border: 1.5px solid rgb(154 154 163 / 60%);
+  border-radius: 50%;
+  opacity: 0;
+}
+
+/* The second ring follows a beat later, which reads as one gesture rather than two. */
+.trail {
+  border-width: 1px;
+}
+
+/*
+ * A gentler curve than the buttons use. The sharp expo-out that feels right for a
+ * press makes a ring rush out and then hang almost still while it fades; this keeps
+ * it travelling for the whole of its life.
+ */
+.up .ring {
+  animation: ripple-out 860ms cubic-bezier(0.33, 0.66, 0.4, 1) forwards;
+}
+
+.down .ring {
+  animation: ripple-in 860ms cubic-bezier(0.33, 0.66, 0.4, 1) forwards;
+}
+
+/*
+ * Must come after the rules above and match their specificity: the `animation`
+ * shorthand there resets delay to 0, which would stack both rings exactly on top of
+ * each other and lose the stagger entirely.
+ */
+.up .trail,
+.down .trail {
+  animation-delay: 120ms;
+}
+
+/* Louder pushes rings outward, quieter pulls them in — the motion carries the meaning. */
+@keyframes ripple-out {
+  0% {
+    transform: scale(0.88);
+    opacity: 0;
+  }
+  22% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes ripple-in {
+  0% {
+    transform: scale(1.45);
+    opacity: 0;
+  }
+  22% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(0.82);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress {
+    transition: none;
+  }
+
+  .value {
+    animation: none;
+  }
+}

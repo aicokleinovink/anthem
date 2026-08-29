@@ -1,12 +1,13 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { PowerButton } from './PowerButton';
+import styles from './Toolbar.module.css';
 
 export const SECTIONS = ['volume', 'inputs', 'settings'] as const;
 
+export type Section = (typeof SECTIONS)[number];
+
 /** The card below the toolbar is the panel these tabs control. */
 export const SECTION_PANEL_ID = 'section-panel';
-
-export type Section = (typeof SECTIONS)[number];
 
 const LABELS: Record<Section, string> = {
   volume: 'Volume',
@@ -44,7 +45,7 @@ export function Toolbar({
     if (!container) return;
 
     const measure = () => {
-      const active = container.querySelector<HTMLElement>('.tab--active');
+      const active = container.querySelector<HTMLElement>(`.${styles.tabActive}`);
       if (active) setPill({ x: active.offsetLeft, width: active.offsetWidth });
     };
 
@@ -55,11 +56,11 @@ export function Toolbar({
   }, [section]);
 
   return (
-    <nav className="toolbar" aria-label="Receiver controls">
-      <div className="toolbar__tabs" role="tablist" ref={tabs}>
+    <nav className={styles.toolbar} aria-label="Receiver controls">
+      <div className={styles.tabs} role="tablist" ref={tabs}>
         {/* Hidden until measured, so it fades in at the right tab instead of sliding in from the left. */}
         <span
-          className={`tab__pill ${pill ? 'tab__pill--ready' : ''}`}
+          className={`${styles.pill} ${pill ? styles.pillReady : ''}`}
           style={pill ? { transform: `translateX(${pill.x}px)`, width: pill.width } : undefined}
           aria-hidden="true"
         />
@@ -72,7 +73,7 @@ export function Toolbar({
             role="tab"
             aria-selected={name === section}
             aria-controls={SECTION_PANEL_ID}
-            className={`tab ${name === section ? 'tab--active' : ''}`}
+            className={`${styles.tab} ${name === section ? styles.tabActive : ''}`}
             onClick={() => onSelect(name)}
           >
             {LABELS[name]}

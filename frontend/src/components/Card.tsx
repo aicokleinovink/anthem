@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import styles from './Card.module.css';
 
 interface CardProps {
   title: string;
@@ -13,11 +14,11 @@ interface CardProps {
 /** The shared surface every control section sits on. */
 export function Card({ title, status, statusStrong, dimmed, children }: CardProps) {
   return (
-    <section className={`card ${dimmed ? 'card--dimmed' : ''}`}>
-      <header className="card__header">
-        <span className="card__title">{title}</span>
+    <section className={`${styles.card} ${dimmed ? styles.dimmed : ''}`}>
+      <header className={styles.header}>
+        <span className={styles.title}>{title}</span>
         {status && (
-          <span className={`card__status ${statusStrong ? 'card__status--strong' : ''}`}>
+          <span className={`${styles.status} ${statusStrong ? styles.statusStrong : ''}`}>
             {status}
           </span>
         )}

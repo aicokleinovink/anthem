@@ -4,6 +4,7 @@ import { StepButton } from '../components/StepButton';
 import { VolumeDial } from '../components/VolumeDial';
 import { useRipples } from '../hooks/useRipples';
 import type { VolumeController } from '../hooks/useVolume';
+import styles from './VolumeCard.module.css';
 
 interface VolumeCardProps {
   /**
@@ -54,7 +55,7 @@ export function VolumeCard({ controller, powerOn, offline }: VolumeCardProps) {
         ripples={ripples}
       />
 
-      <div className="controls">
+      <div className={styles.controls}>
         <StepButton
           direction="down"
           disabled={locked || displayDb === null || displayDb <= MIN_DB}

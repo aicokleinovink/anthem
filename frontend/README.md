@@ -170,15 +170,36 @@ below is the `tabpanel` they control, labelled by the active tab. Buttons carry 
 (`Volume up`, `Turn receiver off`) and selected rows use `aria-pressed`. Every animation is
 dropped under `prefers-reduced-motion`.
 
+## Styling
+
+**CSS Modules, one file per component, sitting next to it** — `Card.module.css` beside
+`Card.tsx`. Class names are scoped and written short (`.card`, `.header`, `.pill`), since
+nothing outside the file can see them. Vite handles this natively; no dependency, no
+runtime.
+
+`styles/global.css` is the only global sheet and holds three things that genuinely cannot
+be scoped:
+
+- the design tokens (`--ink`, `--card`, `--card-height`, …) and the reset
+- the shared `content-in` keyframes
+- the two card-entrance keyframes, because the *direction* is chosen by the app shell but
+  applied to the card. The shell sets `--card-enter` on the stage and the card's own module
+  reads it — a keyframe defined inside a module gets a hashed name that another module
+  cannot reference.
+
+Where a component needs to find its own element (the sliding pills measure the active one),
+it queries with the imported class — `container.querySelector('.' + styles.rowActive)` —
+so the hashed name is never written by hand.
+
 ## Files
 
 ```
-src/api.ts                    typed client for /api/volume and /api/volume/step
-src/hooks/useVolume.ts        polling, optimistic updates, step coalescing
-src/components/VolumeDial.tsx the SVG gauge (270° arc, gap at the bottom)
-src/components/StepButton.tsx the circular − / + buttons
-src/App.tsx                   the card
-src/styles.css                the whole design — monochrome, no web fonts
+src/api.ts                     typed client for the API
+src/hooks/usePolled.ts         poll / optimistic write / rollback, shared by four controls
+src/hooks/useVolume.ts         volume polling and press coalescing
+src/components/                Card, Panel, Toolbar, PowerButton, PillList, VolumeDial, …
+src/cards/                     one card per toolbar section
+src/styles/global.css          tokens, reset, shared keyframes
 ```
 
 No web font is loaded: the system stack renders as SF Pro on iOS, which is what the

@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import styles from './PillList.module.css';
 
 export interface PillItem {
   key: number | string;
@@ -15,13 +16,15 @@ interface PillListProps {
   align?: 'center' | 'top';
   /** Shorter rows, for cards that stack more than one list. */
   compact?: boolean;
+  /** Shown in place of the rows while there is nothing to list yet. */
+  emptyLabel?: string;
   onSelect: (key: number | string) => void;
 }
 
 /**
  * A vertical list whose selection is a single pill that slides between rows — the
  * toolbar's selected-tab pill, turned on its side. Shared by the inputs list and the
- * speaker-profile picker so both navigations feel like the same idea.
+ * settings pickers so every selection in the app behaves the same way.
  */
 export function PillList({
   items,
@@ -29,6 +32,7 @@ export function PillList({
   disabled,
   align = 'center',
   compact,
+  emptyLabel = 'Nothing to show',
   onSelect,
 }: PillListProps) {
   const list = useRef<HTMLDivElement>(null);
@@ -39,7 +43,7 @@ export function PillList({
     if (!container) return;
 
     const measure = () => {
-      const active = container.querySelector<HTMLElement>('.picker__row--active');
+      const active = container.querySelector<HTMLElement>(`.${styles.rowActive}`);
       setPill(active ? { y: active.offsetTop, height: active.offsetHeight } : null);
     };
 
@@ -49,15 +53,27 @@ export function PillList({
     return () => observer.disconnect();
   }, [selected, items.length]);
 
+  const className = [
+    styles.picker,
+    align === 'top' ? styles.top : '',
+    compact ? styles.compact : '',
+    disabled ? styles.disabled : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  if (items.length === 0) {
+    return (
+      <div className={className}>
+        <div className={styles.empty}>{emptyLabel}</div>
+      </div>
+    );
+  }
+
   return (
-    <div
-      className={`picker ${align === 'top' ? 'picker--top' : ''} ${compact ? 'picker--compact' : ''} ${
-        disabled ? 'picker--disabled' : ''
-      }`}
-      ref={list}
-    >
+    <div className={className} ref={list}>
       <span
-        className={`picker__pill ${pill ? 'picker__pill--ready' : ''}`}
+        className={`${styles.pill} ${pill ? styles.pillReady : ''}`}
         style={pill ? { transform: `translateY(${pill.y}px)`, height: pill.height } : undefined}
         aria-hidden="true"
       />
@@ -68,12 +84,12 @@ export function PillList({
           <button
             key={item.key}
             type="button"
-            className={`picker__row ${active ? 'picker__row--active' : ''}`}
+            className={`${styles.row} ${active ? styles.rowActive : ''}`}
             disabled={disabled}
             aria-pressed={active}
             onClick={() => onSelect(item.key)}
           >
-            <span className="picker__label">{item.label}</span>
+            <span className={styles.label}>{item.label}</span>
             {active && item.trailing}
           </button>
         );

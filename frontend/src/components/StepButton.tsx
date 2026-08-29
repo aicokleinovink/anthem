@@ -1,3 +1,5 @@
+import styles from './StepButton.module.css';
+
 interface StepButtonProps {
   direction: 'up' | 'down';
   disabled: boolean;
@@ -7,7 +9,7 @@ interface StepButtonProps {
 export function StepButton({ direction, disabled, onPress }: StepButtonProps) {
   return (
     <button
-      className="step"
+      className={styles.step}
       type="button"
       disabled={disabled}
       onClick={onPress}

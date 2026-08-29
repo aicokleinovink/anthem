@@ -8,6 +8,7 @@ import { useInputs } from './hooks/useInputs';
 import { useDisplay } from './hooks/useDisplay';
 import { useSpeakerProfiles } from './hooks/useSpeakerProfiles';
 import { useVolume } from './hooks/useVolume';
+import styles from './App.module.css';
 
 export default function App() {
   const [section, setSection] = useState<Section>('volume');
@@ -33,8 +34,8 @@ export default function App() {
   };
 
   return (
-    <main className="screen">
-      <div className="shell" data-direction={direction}>
+    <main className={styles.screen}>
+      <div className={styles.shell}>
         <Toolbar
           section={section}
           onSelect={select}
@@ -53,7 +54,7 @@ export default function App() {
           replay when switching between them.
         */}
         <div
-          className="stage"
+          className={`${styles.stage} ${direction === 'left' ? styles.stageLeft : ''}`}
           id={SECTION_PANEL_ID}
           role="tabpanel"
           aria-labelledby={`tab-${section}`}

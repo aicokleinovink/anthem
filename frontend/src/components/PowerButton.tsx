@@ -1,3 +1,5 @@
+import styles from './PowerButton.module.css';
+
 interface PowerButtonProps {
   /** null while the first state is still being fetched. */
   on: boolean | null;
@@ -11,7 +13,7 @@ export function PowerButton({ on, busy, offline, onToggle }: PowerButtonProps) {
   return (
     <button
       type="button"
-      className={`power ${on ? 'power--on' : ''}`}
+      className={`${styles.power} ${on ? styles.on : ''}`}
       disabled={on === null || busy || offline}
       aria-pressed={on ?? false}
       aria-label={on ? 'Turn receiver off' : 'Turn receiver on'}

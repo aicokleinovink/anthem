@@ -1,0 +1,88 @@
+/*
+ * The only global stylesheet: design tokens, the reset, and the keyframes that more
+ * than one component needs. Everything else lives in a *.module.css beside its
+ * component, scoped to it.
+ *
+ * Monochrome, after the "Watch UI kit" reference: a white card with a large corner
+ * radius floating on near-black, heavy numerals over a small grey caption, a thin
+ * round-capped arc, and solid black circular buttons.
+ */
+
+:root {
+  --ink: #121214;
+  --canvas: #141416;
+  --card: #ffffff;
+  --track: #ebebee;
+  --muted: #9a9aa3;
+
+  /* Every section card is this tall, so switching tabs never resizes the surface.
+     It is the natural height of the volume card, which is the tallest. */
+  --card-height: 442px;
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  /* A remote is all taps; never let a double-tap zoom the page. */
+  touch-action: manipulation;
+}
+
+/*
+ * Card entrance. These live here, unscoped, because the direction is chosen by the app
+ * shell but applied to the card: the shell sets --card-enter, and the card's own module
+ * reads it. A keyframe name defined inside a CSS module is hashed and could not be
+ * referenced from another one.
+ */
+@keyframes card-in-right {
+  from {
+    transform: perspective(1100px) translate3d(90px, 0, -140px) rotateY(-16deg) scale(0.95);
+    opacity: 0;
+  }
+  45% {
+    opacity: 1;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes card-in-left {
+  from {
+    transform: perspective(1100px) translate3d(-90px, 0, -140px) rotateY(16deg) scale(0.95);
+    opacity: 0;
+  }
+  45% {
+    opacity: 1;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* Used by the card's contents and by the signal bars as they appear. */
+@keyframes content-in {
+  from {
+    transform: translateY(20px) scale(0.97);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}

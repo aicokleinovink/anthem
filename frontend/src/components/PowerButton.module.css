@@ -1,0 +1,53 @@
+.power {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  padding: 0;
+  border: 1.5px solid var(--track);
+  border-radius: 50%;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background 200ms ease,
+    border-color 200ms ease,
+    color 200ms ease,
+    transform 140ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* On is the filled state, matching the step buttons; off is a quiet outline. */
+.on {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--card);
+}
+
+.power svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.power:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+.power:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.power:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .power {
+    transition: none;
+  }
+}
