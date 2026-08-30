@@ -28,12 +28,36 @@ nothing qualifies, a run says so and stops without doing any work.
 
 ## Pick the issue
 
+**Ask first, but only if there is somebody to ask.** In an interactive run — a person
+typed `/work-an-issue` and is reading the reply — ask whether this run should also consider
+tickets labelled `needs hardware`, before picking anything:
+
+> Only `ready` tickets, or also the ones labelled `needs hardware`? Those need the receiver,
+> streamer and TV reachable.
+
+Ask once, at the start. **An unattended run never asks and never includes them** — there is
+nobody to make the devices reachable, so those tickets would only bail. If you cannot tell
+whether anyone is listening, treat the run as unattended.
+
+The default, and the only option for a scheduled run:
+
+```bash
+gh issue list --label ready --state open --json number,title,assignees,labels \
+  | jq '[.[] | select(any(.labels[]; .name == "needs hardware") | not)]'
+```
+
+Including the hardware tickets is just the unfiltered list:
+
 ```bash
 gh issue list --label ready --state open --json number,title,assignees,labels
 ```
 
 Take the **oldest** issue that has no assignee and no linked open PR. If none qualifies,
 say so and stop — that is a success, not a failure.
+
+If the queue holds nothing but `needs hardware` tickets, say *that* rather than "nothing is
+ready" — the difference matters: one means there is no work, the other means the work is
+waiting on somebody being in the room with the devices.
 
 Claim it before starting, so a second run cannot pick up the same issue:
 
