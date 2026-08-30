@@ -76,7 +76,7 @@ hook inside `VolumeCard` would be unmounted on every tab change and the card wou
 "connecting" each time you came back to it.
 
 The power button reads the receiver's real state (polled every 4 s, slower than volume
-since power rarely changes) and writes `PUT /api/power`. It is optimistic — the icon fills
+since power rarely changes) and writes `PUT /api/power`. It is optimistic — the button lights
 the moment you press — and corrects itself from whatever the receiver confirms.
 
 When the receiver is in standby the volume card says **Standby** and disables its buttons,
@@ -346,7 +346,7 @@ The surface language is one small scale of tokens and nothing else. Three materi
 `--blur-*` recipe that belongs with it, mirroring iOS's tiers: thin for chrome that should
 barely veil the art, regular for controls, thick for the largest pane on screen. Alongside
 them a label ramp (`--label`, `--label-2`, `--label-3`), the edge shadows (`--edge`,
-`--edge-soft`, `--sheen`), and iOS's fill ramp (`--fill`, `--fill-2`, `--thumb`, `--on`) for
+`--edge-soft`, `--sheen`), and iOS's fill ramp (`--fill`, `--fill-2`, `--thumb`) for
 the things cut *into* glass rather than laid on it.
 
 Three rules keep it coherent:
