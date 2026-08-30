@@ -7,24 +7,27 @@
   padding: 0;
   border: 0;
   border-radius: 50%;
-  /* Off is a groove cut into the toolbar; on is the one genuinely opaque fill in the
-     app, the way a Control Centre toggle goes solid white when it is engaged. */
-  background: var(--fill-2);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 8%);
+  /* A raised glass key sitting on the toolbar, the same material as the tab pill: the
+     bar underneath has already blurred what is behind, so this needs no blur of its own. */
+  background: var(--thumb);
+  box-shadow: var(--edge);
   color: var(--label-2);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition:
     background 200ms ease,
-    box-shadow 200ms ease,
     color 200ms ease,
     transform 140ms var(--spring);
 }
 
+/*
+ * On is the same glass, lit: brighter, so the album art still shows through, with the
+ * glyph at full strength. Brightness and glyph together carry the state — a cover can be
+ * any lightness, and neither half of the pair would be enough on its own.
+ */
 .on {
-  background: var(--on);
-  box-shadow: none;
-  color: var(--on-label);
+  background: rgb(255 255 255 / 38%);
+  color: var(--label);
 }
 
 .power svg {
