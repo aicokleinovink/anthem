@@ -152,13 +152,21 @@ goes quiet.
 
 ### Expanding it
 
-The chevron on the strip grows it into the card slot: the same size, the same corner radius
+Tapping the strip grows it into the card slot: the same size, the same corner radius
 and the same shadow as a section card, showing large artwork, the album, a scrub bar, bigger
 transport and the receiver's volume. It **only ever opens because you asked it to** — never
 on a track change, never on play.
 
-Three things close it, and the last two also do what you asked in the same tap: the chevron,
-a section tab, or the device switcher.
+Three things close it, and the last two also do what you asked in the same tap: the grab
+bar, a section tab, or the device switcher.
+
+**Neither control is a chevron, and neither is a bare `div`.** The strip's surface is an
+invisible `<button>` under the layout — a sibling of the transport buttons, never their
+parent — and the grab bar is a `<button>` styled as the pill, which starts the drag on
+`pointerdown` and also collapses on click or Enter. Both keep the names the e2e specs drive
+them by, "Expand player" and "Collapse player". Dragging is a pointer gesture with no
+keyboard equivalent, so the bar has to be operable on its own; a click at the end of a real
+drag is ignored, which is what `Morph.dragged()` is for.
 
 **It is one element that changes shape, not two that cross-fade.** `hooks/usePlayerMorph.ts`
 measures the two slots — the card's `tabpanel` and an empty placeholder div where the strip
