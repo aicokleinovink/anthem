@@ -10,6 +10,7 @@
     "build": "tsc -p tsconfig.json",
     "probe": "tsx --env-file-if-exists=.env scripts/probe.ts",
     "test": "tsx --test test/*.test.ts",
+    "serve-fake": "tsx scripts/serve-fake.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "pair-tv": "tsx --env-file-if-exists=.env scripts/pair-tv.ts"
   },

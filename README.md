@@ -76,11 +76,17 @@ UI is an echo of what was requested.
 ## Tests
 
 ```bash
-cd api && npm test          # protocol parsing, command building, state cache, transport
+cd api && npm test                        # protocol parsing, commands, state cache, transport
+cd e2e && npm install && npm run e2e      # the real UI, end to end, against fake devices
 ```
 
-They run without hardware. `npm run probe` in `api/` replays every read-only query against
-the real receiver and prints what comes back.
+Both run without hardware. The end-to-end suite is Playwright driving the built app while
+the API talks to a **fake receiver speaking the ASCII protocol over TCP** — so the transport,
+the parser and the event stream are all in the tested path, and a test can assert on the
+bytes that went out. See [e2e/README.md](e2e/README.md).
+
+`npm run probe` in `api/` replays every read-only query against the real receiver and prints
+what comes back.
 
 ## Notes
 
