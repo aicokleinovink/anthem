@@ -107,7 +107,8 @@ export function Player({
     '--art-top': `${artTop}px`,
     '--art-left': `${artLeft}px`,
     '--art-radius': `${lerp(ART.small.radius, ART.large.radius, p)}px`,
-    '--radius': `${lerp(28, 44, p)}px`,
+    // Ends on the card's own radius, since expanded it stands in the card's place.
+    '--radius': `${lerp(26, 28, p)}px`,
     // Each layout is gone before the other arrives, so they never overlap mid-morph.
     '--mini-opacity': Math.max(0, 1 - p * 2.4),
     '--big-opacity': Math.max(0, (p - 0.55) / 0.45),

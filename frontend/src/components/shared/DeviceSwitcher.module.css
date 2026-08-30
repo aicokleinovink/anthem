@@ -11,7 +11,7 @@
 }
 
 .separator {
-  color: var(--muted);
+  color: var(--label-3);
   font-size: 12px;
   opacity: 0.5;
 }
@@ -20,7 +20,7 @@
   padding: 4px 10px;
   border: 0;
   background: none;
-  color: var(--muted);
+  color: var(--label-3);
   font: inherit;
   font-size: 12px;
   font-weight: 600;
@@ -31,11 +31,11 @@
 }
 
 .deviceActive {
-  color: var(--card);
+  color: var(--label);
 }
 
 .device:focus-visible {
-  outline: 2px solid var(--card);
+  outline: 2px solid var(--label);
   outline-offset: 2px;
   border-radius: 12px;
 }

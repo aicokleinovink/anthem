@@ -1,6 +1,10 @@
 /*
  * The artwork, blown up and blurred past recognition, behind everything. It is meant to
  * read as a colour temperature for the room rather than as a picture.
+ *
+ * There is always something here. Every surface above is glass, so the backdrop is not
+ * decoration it can do without — with nothing playing the gradient below takes over and
+ * the panes still have colour to lift out of.
  */
 .backdrop {
   position: fixed;
@@ -9,6 +13,33 @@
   overflow: hidden;
   background: var(--canvas);
   pointer-events: none;
+}
+
+/*
+ * The no-art ground. Two off-axis pools of colour over the canvas rather than a single
+ * linear ramp: a linear gradient behind glass reads as a wall, whereas something with a
+ * centre of gravity gives the blur a highlight to find and the panes an edge to show
+ * against. Cool and very dark, so it never competes with a cover.
+ */
+.gradient {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(90% 70% at 22% 12%, #3d456e 0%, transparent 62%),
+    radial-gradient(80% 70% at 82% 88%, #4b3557 0%, transparent 60%),
+    linear-gradient(160deg, #14141c 0%, #0b0b0f 100%);
+}
+
+/*
+ * A dusting of noise over the gradient. Wide, low-contrast gradients band in 8-bit, and
+ * the vignette on top makes it worse; a couple of percent of grain hides the steps. It is
+ * a tiled fractal-noise SVG rather than an image file, so it costs nothing to serve.
+ */
+.noise {
+  position: absolute;
+  inset: 0;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" stitchTiles="stitch"/></filter><rect width="120" height="120" filter="url(%23n)"/></svg>');
+  opacity: 0.035;
 }
 
 /*
@@ -43,20 +74,24 @@
 
 /*
  * Two passes over the top. The flat scrim holds the whole thing down near the canvas
- * colour so a white card always has something to sit on, whatever the cover; the vignette
- * keeps the corners from competing with the card.
+ * colour, which is what keeps light text on the glass legible over a pale cover; the
+ * vignette keeps the corners from competing with the panes.
+ *
+ * Lighter than it was for the opaque cards. Glass takes a second bite out of whatever is
+ * behind it, so scrimming as hard as before left the panes looking like flat dark plastic
+ * with no colour to refract.
  */
 .scrim {
   position: absolute;
   inset: 0;
   background: var(--canvas);
-  opacity: 0.42;
+  opacity: 0.34;
 }
 
 .vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(120% 90% at 50% 40%, transparent 35%, rgb(0 0 0 / 55%) 100%);
+  background: radial-gradient(120% 90% at 50% 40%, transparent 38%, rgb(0 0 0 / 46%) 100%);
 }
 
 /* Still a slow cross-fade of colour, which is not motion — but not an abrupt cut either. */

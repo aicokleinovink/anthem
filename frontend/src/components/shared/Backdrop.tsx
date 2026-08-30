@@ -11,8 +11,13 @@ interface BackdropProps {
  *
  * Two layers rather than one, because swapping the `src` of a single image would cut to
  * the new artwork instantly. The outgoing cover stays mounted underneath while the
- * incoming one fades in over it, so the room changes colour rather than flicking. With
- * nothing playing both fade out and the plain canvas is all that is left.
+ * incoming one fades in over it, so the room changes colour rather than flicking.
+ *
+ * Under all of it, always, a static gradient. Every surface in the app is glass, and
+ * glass with nothing behind it is just a dark rectangle — so when nothing is playing the
+ * artwork fades away to reveal the gradient rather than to reveal the flat canvas, and
+ * the panes still have something to refract. The gradient carries a little noise, because
+ * a smooth wide gradient bands visibly once a heavy blur has averaged it out.
  *
  * Nothing here samples the image. The art is served either by the streamer or by whichever
  * service it came from, so a canvas read would be cross-origin tainted; the blur does the
@@ -34,6 +39,8 @@ export function Backdrop({ image }: BackdropProps) {
 
   return (
     <div className={styles.backdrop} aria-hidden="true">
+      <div className={styles.gradient} />
+      <div className={styles.noise} />
       {layers.map((src) => (
         <Layer key={src} src={src} shown={src === image} onFail={() => drop(src)} />
       ))}

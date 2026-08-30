@@ -3,45 +3,103 @@
  * than one component needs. Everything else lives in a *.module.css beside its
  * component, scoped to it.
  *
- * Monochrome, after the "Watch UI kit" reference: a white card with a large corner
- * radius floating on near-black, heavy numerals over a small grey caption, a thin
- * round-capped arc, and solid black circular buttons.
+ * Dark frosted glass, in the idiom of iOS Control Centre and the Now Playing sheet:
+ * translucent dark panes over the artwork backdrop, light labels, a specular hairline
+ * along the top edge and a darker one along the bottom. There is exactly one surface
+ * language — the backdrop always renders something, so glass always has something to
+ * refract and there is never a solid-card mode to fall back to.
+ *
+ * Deliberately frosted rather than liquid: blur and saturation only, no refraction
+ * shader and no per-frame gloss, because this has to stay smooth on a Raspberry Pi.
  */
 
 :root {
-  --ink: #121214;
-  --canvas: #141416;
-  --card: #ffffff;
-  --track: #ebebee;
-  --muted: #9a9aa3;
+  --canvas: #0b0b0f;
+
+  /*
+   * Labels follow iOS's dark-mode ramp: primary is pure white, the quieter tiers are a
+   * cool near-white at falling alpha rather than a flat grey, so they pick up whatever
+   * colour the artwork puts behind them instead of going muddy.
+   */
+  --label: #ffffff;
+  --label-2: rgb(235 235 245 / 62%);
+  --label-3: rgb(235 235 245 / 34%);
+
+  /*
+   * The material scale, matching iOS's tiers. Each is a background colour plus the
+   * filter that belongs with it; components pick a tier and use both, and no component
+   * invents its own blur. Thin is for small chrome that should barely veil the art,
+   * regular for controls, thick for the largest pane on screen.
+   */
+  --glass-thin: rgb(44 44 52 / 36%);
+  --blur-thin: blur(18px) saturate(180%);
+  --glass-regular: rgb(38 38 46 / 50%);
+  --blur-regular: blur(28px) saturate(180%);
+  --glass-thick: rgb(30 30 38 / 62%);
+  --blur-thick: blur(40px) saturate(180%);
+
+  /*
+   * Edges are what make a pane read as glass rather than as a tinted rectangle: a bright
+   * hairline catching light along the top, a darker one underneath, and a faint ring all
+   * the way round so the shape survives against a cover of any lightness.
+   */
+  --edge:
+    inset 0 1px 0 rgb(255 255 255 / 36%),
+    inset 0 -1px 0 rgb(0 0 0 / 30%),
+    inset 0 0 0 1px rgb(255 255 255 / 11%);
+  --edge-soft:
+    inset 0 1px 0 rgb(255 255 255 / 24%),
+    inset 0 0 0 1px rgb(255 255 255 / 9%);
+  /* A soft inner light under the top edge, so a large pane is not flat across its face. */
+  --sheen: inset 0 16px 34px -14px rgb(255 255 255 / 14%);
+
+  --separator: rgb(255 255 255 / 12%);
+
+  /*
+   * iOS's fill ramp, for the things that are cut *into* glass rather than laid on it:
+   * segmented-control tracks, slider grooves, the dial's unfilled arc.
+   */
+  --fill: rgb(120 120 128 / 30%);
+  --fill-2: rgb(120 120 128 / 18%);
+  /* A selection thumb is brighter glass, never a solid: it still shows the art through. */
+  --thumb: rgb(255 255 255 / 18%);
+  /* The one genuinely opaque fill, for a control that is switched on. */
+  --on: rgb(255 255 255 / 92%);
+  --on-label: #101014;
 
   /* Every section card is this tall, so switching tabs never resizes the surface.
      It is the natural height of the volume card, which is the tallest. */
   --card-height: 442px;
 
-  /*
-   * White surfaces float on a dark canvas, so one soft dark shadow is enough to lift them.
-   * With the artwork backdrop on, the ground behind can be any colour and any lightness,
-   * and a soft dark shadow alone can disappear against a pale cover — so `.tinted` swaps
-   * in a tighter shadow plus a hairline of light along the top edge, which gives the card
-   * an actual edge whatever is behind it.
-   */
-  --shadow-card: 0 32px 80px rgb(0 0 0 / 45%);
-  --shadow-strip: 0 18px 44px rgb(0 0 0 / 35%);
-}
+  /* iOS's sheet curve: leaves fast, settles slowly, no overshoot. */
+  --spring: cubic-bezier(0.32, 0.72, 0, 1);
 
-/* Set on the shell while album art is showing behind the UI. */
-.tinted {
-  --shadow-card:
-    0 1px 0 rgb(255 255 255 / 55%),
-    0 2px 6px rgb(0 0 0 / 22%),
-    0 24px 60px rgb(0 0 0 / 40%);
-  --shadow-strip:
-    0 1px 0 rgb(255 255 255 / 55%),
-    0 2px 5px rgb(0 0 0 / 20%),
-    0 14px 36px rgb(0 0 0 / 32%);
+  /*
+   * Glass carries its own edge, so it needs far less shadow than the opaque cards did —
+   * only enough to lift the pane off the backdrop and stop the blur reading as a smudge.
+   */
+  --shadow-card: 0 20px 52px rgb(0 0 0 / 46%);
+  --shadow-strip: 0 12px 32px rgb(0 0 0 / 38%);
 
   color-scheme: dark;
+}
+
+/*
+ * Set on the shell while album art is showing behind the UI.
+ *
+ * With the fallback gradient behind it the ground is known and dim; a cover can be any
+ * colour and any lightness, and a soft dark shadow alone disappears against a pale one.
+ * So the tinted shadows tighten up and add a close contact shadow, which reads as an
+ * edge whatever is behind it. The hairline of light that used to live here belongs to
+ * the glass edge now, and is always on.
+ */
+.tinted {
+  --shadow-card:
+    0 2px 8px rgb(0 0 0 / 28%),
+    0 22px 56px rgb(0 0 0 / 44%);
+  --shadow-strip:
+    0 2px 6px rgb(0 0 0 / 24%),
+    0 14px 36px rgb(0 0 0 / 36%);
 }
 
 * {
@@ -57,7 +115,9 @@ body,
 body {
   margin: 0;
   background: var(--canvas);
-  font-family: -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', sans-serif;
+  color: var(--label);
+  /* SF first, so the numerals and tracking are the ones the rest of this is drawn to. */
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   /* A remote is all taps; never let a double-tap zoom the page. */
   touch-action: manipulation;
