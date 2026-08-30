@@ -8,9 +8,20 @@
 
 /* Toolbar and card are separate surfaces with air between them. */
 .shell {
+  position: relative;
   display: grid;
   gap: 14px;
   width: min(360px, 100%);
+}
+
+/*
+ * The player's collapsed slot. It holds the space and nothing else — the player itself is
+ * absolutely positioned over the shell so it can travel between here and the card above.
+ * The height is the strip's natural one, which is fixed: artwork, one row, one progress
+ * line.
+ */
+.strip {
+  height: 106px;
 }
 
 /* The device switcher reads as a heading over the section tabs, so it sits nearer to

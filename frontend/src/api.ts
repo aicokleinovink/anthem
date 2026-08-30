@@ -36,6 +36,8 @@ export interface NowPlaying {
   /** Seconds into the track, and its length — absent for live radio. */
   elapsed: number | null;
   duration: number | null;
+  /** Whether the streamer will accept a seek — false for live radio. */
+  canSeek: boolean;
 }
 
 export type PlayerAction = 'play' | 'pause' | 'next' | 'previous';
@@ -82,17 +84,22 @@ export const stepVolume = (steps: number) =>
   }).then((response) => {
     if (!response.ok) throw new ApiError(response.statusText, response.status);
   });
+/** Absolute level, for the player's slider. The buttons use the step route instead. */
+export const setVolumeDb = (db: number) => write('/api/volume', { db });
 export const selectInput = (input: number) => write('/api/input', { input });
 export const setSpeakerProfile = (profile: number) => write('/api/speaker-profile', { profile });
 export const setDisplay = (info: number) => write('/api/display', { info });
 
 export const selectTvTarget = (target: string) => write('/api/tv', { target });
 
-export const playerAction = (action: PlayerAction) =>
+const player = (body: unknown) =>
   fetch('/api/player', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ action }),
+    body: JSON.stringify(body),
   }).then((response) => {
     if (!response.ok) throw new ApiError(response.statusText, response.status);
   });
+
+export const playerAction = (action: PlayerAction) => player({ action });
+export const seekPlayer = (seconds: number) => player({ action: 'seek', seconds });
