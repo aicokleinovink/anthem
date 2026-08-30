@@ -25,8 +25,8 @@ Screen — it opens full-screen without Safari chrome.
 
 ## Sections and power
 
-Each control section is its own card on a shared shell (`components/Card.tsx`), so adding
-one is a component plus an entry in `SECTIONS` in `components/Toolbar.tsx`.
+Each control section is its own card on a shared shell (`components/shared/Card.tsx`), so adding
+one is a component plus an entry in `SECTIONS` in `components/shared/Toolbar.tsx`.
 
 The selected tab's black pill is a **single element that slides** between tabs rather than a
 background on each one — that is what makes the move animatable. Its position and width are
@@ -104,7 +104,7 @@ the receiver confirms.
 
 Selection uses **the toolbar's sliding pill turned on its side**: one element that moves
 between rows rather than a background on each, with the same overshoot easing, so the two
-navigations feel like one idea. It lives in `components/PillList.tsx` and is shared with the
+navigations feel like one idea. It lives in `components/shared/PillList.tsx` and is shared with the
 speaker-profile picker.
 
 The header shows the format of the signal actually arriving (`Dolby D+`, `2.0 PCM`,
@@ -239,8 +239,8 @@ place, so every card would slide its pill in on load.
 src/api.ts                     typed client for the API
 src/hooks/useReceiver.ts       the event stream: snapshots, reconnection, optimistic writes
 src/hooks/useVolume.ts         volume level and press coalescing
-src/components/                Card, Panel, Toolbar, PowerButton, PillList, VolumeDial, …
-src/cards/                     one card per toolbar section
+src/components/shared/         Card, Panel, Toolbar, PowerButton, PillList, VolumeDial, …
+src/components/pages/          one card per toolbar section
 src/styles/global.css          tokens, reset, shared keyframes
 ```
 

@@ -1,6 +1,6 @@
-import { Card } from '../components/Card';
-import { Panel } from '../components/Panel';
-import { PillList } from '../components/PillList';
+import { Card } from '../shared/Card';
+import { Panel } from '../shared/Panel';
+import { PillList } from '../shared/PillList';
 interface SpeakerProfilesController {
   profiles: Array<{ profile: number; value: number; name: string }>;
   selected: number | null;

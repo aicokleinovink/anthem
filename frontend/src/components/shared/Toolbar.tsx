@@ -1,4 +1,4 @@
-import { useSlidingPill } from '../hooks/useSlidingPill';
+import { useSlidingPill } from '../../hooks/useSlidingPill';
 import { PowerButton } from './PowerButton';
 import styles from './Toolbar.module.css';
 

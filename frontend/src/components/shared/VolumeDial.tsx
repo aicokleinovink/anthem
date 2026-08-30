@@ -1,4 +1,4 @@
-import type { Ripple } from '../hooks/useRipples';
+import type { Ripple } from '../../hooks/useRipples';
 import styles from './VolumeDial.module.css';
 
 const SIZE = 268;

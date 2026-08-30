@@ -1,9 +1,9 @@
-import { MIN_DB, MAX_DB } from '../api';
-import { Card } from '../components/Card';
-import { StepButton } from '../components/StepButton';
-import { VolumeDial } from '../components/VolumeDial';
-import { useRipples } from '../hooks/useRipples';
-import type { VolumeController } from '../hooks/useVolume';
+import { MIN_DB, MAX_DB } from '../../api';
+import { Card } from '../shared/Card';
+import { StepButton } from '../shared/StepButton';
+import { VolumeDial } from '../shared/VolumeDial';
+import { useRipples } from '../../hooks/useRipples';
+import type { VolumeController } from '../../hooks/useVolume';
 import styles from './VolumeCard.module.css';
 
 interface VolumeCardProps {

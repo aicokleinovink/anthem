@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { selectInput, selectTvTarget, setDisplay, setPower, setSpeakerProfile } from './api';
-import { InputsCard } from './cards/InputsCard';
-import { SettingsCard } from './cards/SettingsCard';
-import { TvCard } from './cards/TvCard';
-import { VolumeCard } from './cards/VolumeCard';
-import { MiniPlayer } from './components/MiniPlayer';
-import { SECTIONS, SECTION_PANEL_ID, Toolbar, type Section } from './components/Toolbar';
+import { InputsCard } from './components/pages/InputsCard';
+import { SettingsCard } from './components/pages/SettingsCard';
+import { TvCard } from './components/pages/TvCard';
+import { VolumeCard } from './components/pages/VolumeCard';
+import { MiniPlayer } from './components/shared/MiniPlayer';
+import { SECTIONS, SECTION_PANEL_ID, Toolbar, type Section } from './components/shared/Toolbar';
 import { useReceiver } from './hooks/useReceiver';
 import { useSustained } from './hooks/useSustained';
 import { useVolume } from './hooks/useVolume';
