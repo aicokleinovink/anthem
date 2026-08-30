@@ -4,8 +4,10 @@ A web remote for the Anthem MRX 540, styled after the Dribbble "Watch UI kit" re
 monochrome, white cards on near-black, heavy numerals, thin round-capped arcs, solid black
 circular buttons.
 
-A toolbar sits above the card: **Volume**, **Inputs** and **Settings** swap the card
-beneath it, and the **power button** on the right turns the receiver on and off.
+Two rows of chrome sit above the card. A **device switcher** — TV · Anthem — chooses
+whose controls you are looking at, and the **section toolbar** below it swaps the card:
+**Inputs** for the TV, **Volume**, **Inputs** and **Settings** for the receiver. The
+**power button** on the right of the toolbar turns the receiver on and off.
 
 Vite + React + TypeScript. It talks to the Express API in `../api`, which owns the TCP
 connection to the receiver (a browser cannot open raw sockets).
@@ -23,10 +25,25 @@ there is no CORS to configure.
 On your phone: `npm run dev -- --host`, open `http://<your-mac>:5173`, then Add to Home
 Screen — it opens full-screen without Safari chrome.
 
-## Sections and power
+## Devices and sections
 
 Each control section is its own card on a shared shell (`components/shared/Card.tsx`), so adding
 one is a component plus an entry in `SECTIONS` in `components/shared/Toolbar.tsx`.
+
+`SECTIONS` is **per device**, not one flat list: it maps each device to the sections it
+offers. `Inputs` appears under both and means that device's own sources — the TV's watch
+targets, or the receiver's inputs — so it is the one section that carries across when you
+switch device. Anything else falls back to the new device's first section.
+
+The device switcher (`components/shared/DeviceSwitcher.tsx`) has no surface of its own:
+plain text on the canvas, above the toolbar and closer to it than the toolbar is to the
+card, so it reads as a heading over the section tabs rather than as a second set of them.
+It is a group of `aria-pressed` buttons; the section tabs remain the tablist that owns the
+card below.
+
+**The TV's lone tab is rendered without the sliding pill.** A pill that cannot move looks
+broken, so the single active tab paints the pill's background on itself and
+`useSlidingPill` is not measured at all — it is only meaningful with two or more tabs.
 
 The selected tab's black pill is a **single element that slides** between tabs rather than a
 background on each one — that is what makes the move animatable. Its position and width are
@@ -133,7 +150,7 @@ goes quiet.
 
 ## TV
 
-Four pills — HDMI 1, PlayStation, YouTube, Netflix — switching the LG set's input or
+Under the TV device, `Inputs` is the set's own sources. Four pills — HDMI 1, PlayStation, YouTube, Netflix — switching the LG set's input or
 launching an app. The selection is not assumed: the API subscribes to what the TV reports
 as its foreground app, so the highlight follows the set even when you change it with its own
 remote, and shows nothing when it is on something outside this list.
@@ -239,8 +256,8 @@ place, so every card would slide its pill in on load.
 src/api.ts                     typed client for the API
 src/hooks/useReceiver.ts       the event stream: snapshots, reconnection, optimistic writes
 src/hooks/useVolume.ts         volume level and press coalescing
-src/components/shared/         Card, Panel, Toolbar, PowerButton, PillList, VolumeDial, …
-src/components/pages/          one card per toolbar section
+src/components/shared/         Card, Panel, Toolbar, DeviceSwitcher, PowerButton, PillList, …
+src/components/pages/          one card per device section
 src/styles/global.css          tokens, reset, shared keyframes
 ```
 

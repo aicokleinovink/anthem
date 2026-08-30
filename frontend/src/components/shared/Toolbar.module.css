@@ -64,6 +64,11 @@
   color: var(--card);
 }
 
+/* The active tab when it is the only one: the pill's look, painted on the tab itself. */
+.tabSolo {
+  background: var(--ink);
+}
+
 .tab:focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
