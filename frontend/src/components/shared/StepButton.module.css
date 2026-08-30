@@ -6,12 +6,19 @@
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: var(--ink);
-  color: var(--card);
+  /*
+   * A glass button, but with no blur of its own: it sits on the card, which has already
+   * blurred everything behind it, so a second backdrop-filter would buy nothing and cost
+   * frames on the Pi. The translucent fill and the specular edge are what read as glass.
+   */
+  background: var(--thumb);
+  box-shadow: var(--edge-soft);
+  color: var(--label);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition:
-    transform 140ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 140ms var(--spring),
+    background 140ms ease,
     opacity 160ms ease;
 }
 
@@ -21,8 +28,10 @@
   stroke-linecap: round;
 }
 
+/* iOS button feel: dim and shrink very slightly, rather than invert. */
 .step:active:not(:disabled) {
-  transform: scale(0.92);
+  transform: scale(0.94);
+  background: var(--fill-2);
 }
 
 .step:disabled {
@@ -31,7 +40,7 @@
 }
 
 .step:focus-visible {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--label);
   outline-offset: 4px;
 }
 

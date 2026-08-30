@@ -1,8 +1,9 @@
 # Anthem remote
 
-A web remote for the Anthem MRX 540, styled after the Dribbble "Watch UI kit" reference —
-monochrome, white cards on near-black, heavy numerals, thin round-capped arcs, solid black
-circular buttons.
+A web remote for the Anthem MRX 540, in dark frosted glass — translucent panes over a
+backdrop taken from the album art, in the idiom of iOS Control Centre and the Now Playing
+sheet. Monochrome still: heavy numerals, thin round-capped arcs, circular buttons, light
+labels on glass.
 
 Two rows of chrome sit above the card. A **device switcher** — TV · Anthem — chooses
 whose controls you are looking at, and the **section toolbar** below it swaps the card:
@@ -224,14 +225,23 @@ Four things about it are deliberate:
 - **Nothing samples the image.** The art comes from a service CDN or the Node, so a canvas
   read would be cross-origin tainted. A blur needs no such access, and keeping the cover's
   own gradients is what makes it read as organic rather than as a flat wash.
-- **The white surfaces stop assuming a dark ground.** `--shadow-card` and `--shadow-strip`
-  are swapped by `.tinted` for a tighter shadow plus a hairline of light along the top edge,
-  so a card still has an edge against a pale cover. That is why the three shadows in the app
-  are tokens rather than literals.
+- **There is always something behind the UI.** Every surface is glass, and glass with
+  nothing behind it is a dark rectangle — so under the artwork sits a static gradient with a
+  dusting of noise, and when the music stops the cover fades away to reveal *that* rather
+  than the flat canvas. The noise is there because a wide, low-contrast gradient bands
+  visibly once the vignette is over it.
+- **The surfaces stop assuming a known ground.** `--shadow-card` and `--shadow-strip` are
+  swapped by `.tinted` for a tighter shadow plus a close contact shadow, so a pane still has
+  an edge against a pale cover. That is why the shadows in the app are tokens rather than
+  literals. The hairline of light that used to live in `.tinted` belongs to the glass edge
+  now, and is always on.
 
-A flat scrim at 42% and a vignette hold the whole thing down near the canvas colour. That is
-what keeps a garish cover from taking over — and it is also why a very dark cover produces
-almost no visible effect, which is expected rather than a bug.
+A flat scrim at 34% and a vignette hold the whole thing down near the canvas colour. That is
+what keeps a garish cover from taking over, and what keeps light labels on the glass legible
+over a very pale cover — the dimmest text in the app measures 4.9:1 against the brightest
+cover. It is lighter than it was for the opaque cards: glass takes a second bite out of
+whatever is behind it, and scrimming as hard as before left the panes looking like flat dark
+plastic with nothing to refract.
 
 ## TV
 
@@ -317,9 +327,34 @@ nothing outside the file can see them. Vite handles this natively; no dependency
 runtime.
 
 `styles/global.css` is the only global sheet and holds two things that genuinely cannot
-be scoped: the design tokens (`--ink`, `--card`, `--card-height`, …) with the reset, and the
-two card-entrance keyframes — the *direction* is chosen by the app shell but applied to the
+be scoped: the design tokens (the glass scale, the label ramp, `--card-height`, …) with the
+reset, and the two card-entrance keyframes — the *direction* is chosen by the app shell but applied to the
 card, and it travels as `--card-enter`, which CSS Modules leaves alone inside `var()`.
+
+### Materials
+
+The surface language is one small scale of tokens and nothing else. Three material tiers —
+`--glass-thin`, `--glass-regular`, `--glass-thick` — each a background colour plus the
+`--blur-*` recipe that belongs with it, mirroring iOS's tiers: thin for chrome that should
+barely veil the art, regular for controls, thick for the largest pane on screen. Alongside
+them a label ramp (`--label`, `--label-2`, `--label-3`), the edge shadows (`--edge`,
+`--edge-soft`, `--sheen`), and iOS's fill ramp (`--fill`, `--fill-2`, `--thumb`, `--on`) for
+the things cut *into* glass rather than laid on it.
+
+Three rules keep it coherent:
+
+- **No component invents its own blur.** Pick a tier, use both halves of it.
+- **Never glass on glass.** A pane sits on the backdrop, never on another pane. Anything
+  inside a pane — the settings groove, the step and power buttons, the sliding thumbs — gets
+  the *look* of glass from a translucent fill and a specular edge, but no `backdrop-filter`
+  of its own: the pane underneath has already blurred what is behind, so a second pass would
+  buy nothing and cost frames on the Pi.
+- **Edges do the work, not shadows.** A bright hairline along the top, a darker one along
+  the bottom and a faint ring all round are what make a pane read as glass against a cover of
+  any lightness. The drop shadows are only there to lift it off the backdrop.
+
+Deliberately frosted, not liquid: blur and saturation only, no refraction and no per-frame
+gloss, because this has to stay smooth on a Raspberry Pi.
 
 **Every other keyframe belongs inside the module that uses it.** CSS Modules rewrites
 `animation-name` to a hashed local name, so a module referencing a keyframe defined in a

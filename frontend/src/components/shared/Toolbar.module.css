@@ -1,12 +1,19 @@
+/*
+ * A floating tab bar, in the idiom of the iOS bar that hovers clear of the screen edge:
+ * its own pane, the regular material rather than the card's thick one, so the chrome
+ * stays a step lighter than the content it switches between.
+ */
 .toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
   padding: 7px;
-  border-radius: 28px;
-  background: var(--card);
-  box-shadow: var(--shadow-strip);
+  border-radius: 26px;
+  background: var(--glass-regular);
+  backdrop-filter: var(--blur-regular);
+  -webkit-backdrop-filter: var(--blur-regular);
+  box-shadow: var(--edge), var(--shadow-strip);
 }
 
 .tabs {
@@ -22,8 +29,12 @@
   top: 0;
   left: 0;
   height: 100%;
-  border-radius: 20px;
-  background: var(--ink);
+  border-radius: 19px;
+  /* Brighter glass, not a solid: the selection lifts out of the bar rather than
+     punching a hole in it. No blur of its own — the bar underneath already blurred
+     everything behind, and a second pass would only cost frames on the Pi. */
+  background: var(--thumb);
+  box-shadow: var(--edge-soft);
   opacity: 0;
 }
 
@@ -36,8 +47,8 @@
 
 .animated {
   transition:
-    transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
-    width 420ms cubic-bezier(0.22, 1, 0.36, 1);
+    transform 420ms var(--spring),
+    width 420ms var(--spring);
 }
 
 .tab {
@@ -46,9 +57,9 @@
   z-index: 1;
   padding: 9px 13px;
   border: 0;
-  border-radius: 20px;
+  border-radius: 19px;
   background: none;
-  color: var(--muted);
+  color: var(--label-2);
   font: inherit;
   font-size: 13px;
   font-weight: 600;
@@ -61,16 +72,17 @@
 }
 
 .tabActive {
-  color: var(--card);
+  color: var(--label);
 }
 
 /* The active tab when it is the only one: the pill's look, painted on the tab itself. */
 .tabSolo {
-  background: var(--ink);
+  background: var(--thumb);
+  box-shadow: var(--edge-soft);
 }
 
 .tab:focus-visible {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--label);
   outline-offset: 2px;
 }
 

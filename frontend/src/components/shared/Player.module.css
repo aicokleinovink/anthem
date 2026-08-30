@@ -7,29 +7,36 @@
  * the finger when the surface is being dragged, because a drag simply writes a different
  * set of values every frame with the transition switched off.
  *
- * Same white, deeply rounded surface as the toolbar and the cards, floating on the dark.
+ * Same glass as the toolbar and the cards, floating on the artwork behind it. It changes
+ * material as it morphs: the strip is a small piece of chrome and takes the regular tier,
+ * while expanded it stands in for the card and takes the thick one.
  */
 .player {
   position: absolute;
-  border-radius: var(--radius, 28px);
-  background: var(--card);
-  color: var(--ink);
-  box-shadow: var(--shadow-strip);
+  border-radius: var(--radius, 26px);
+  background: var(--glass-regular);
+  backdrop-filter: var(--blur-regular);
+  -webkit-backdrop-filter: var(--blur-regular);
+  color: var(--label);
+  box-shadow: var(--edge), var(--shadow-strip);
   /* The artwork grows past the corner before the radius catches up with it. */
   overflow: hidden;
   transition:
-    top 520ms cubic-bezier(0.22, 1, 0.36, 1),
-    left 520ms cubic-bezier(0.22, 1, 0.36, 1),
-    width 520ms cubic-bezier(0.22, 1, 0.36, 1),
-    height 520ms cubic-bezier(0.22, 1, 0.36, 1),
-    border-radius 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    top 520ms var(--spring),
+    left 520ms var(--spring),
+    width 520ms var(--spring),
+    height 520ms var(--spring),
+    border-radius 520ms var(--spring),
     box-shadow 520ms ease;
-  animation: player-in 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: player-in 420ms var(--spring);
 }
 
 .expanded {
-  /* Sitting where the card sits, it should carry the card's weight. */
-  box-shadow: var(--shadow-card);
+  /* Sitting where the card sits, it should carry the card's weight and its material. */
+  background: var(--glass-thick);
+  backdrop-filter: var(--blur-thick);
+  -webkit-backdrop-filter: var(--blur-thick);
+  box-shadow: var(--edge), var(--sheen), var(--shadow-card);
 }
 
 /* A drag writes a new frame every move; easing it would lag behind the finger. */
@@ -57,23 +64,27 @@
   width: var(--art-size);
   height: var(--art-size);
   border-radius: var(--art-radius);
-  background: var(--track);
+  background: var(--fill);
   object-fit: cover;
-  /* Keeps pale artwork from dissolving into the card. */
-  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 7%);
+  /* Now Playing's artwork sits in a well: a dark inner shadow round the edge so a pale
+     cover has a rim, and the thumbnail reads as inset into the glass rather than laid
+     on top of it. */
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 10%),
+    inset 0 2px 10px rgb(0 0 0 / 35%);
   transition:
-    top 520ms cubic-bezier(0.22, 1, 0.36, 1),
-    left 520ms cubic-bezier(0.22, 1, 0.36, 1),
-    width 520ms cubic-bezier(0.22, 1, 0.36, 1),
-    height 520ms cubic-bezier(0.22, 1, 0.36, 1),
-    border-radius 520ms cubic-bezier(0.22, 1, 0.36, 1);
+    top 520ms var(--spring),
+    left 520ms var(--spring),
+    width 520ms var(--spring),
+    height 520ms var(--spring),
+    border-radius 520ms var(--spring);
 }
 
 /* Stands in while the artwork loads, or when a source provides none. */
 .artFallback {
   display: grid;
   place-items: center;
-  color: var(--muted);
+  color: var(--label-3);
 }
 
 /* Both layouts occupy the whole surface; only their opacity says which one is showing. */
@@ -124,7 +135,7 @@
 
 /* Its own line, so a long artist is not fighting the clock for room. */
 .artist {
-  color: var(--muted);
+  color: var(--label-2);
   font-size: 12.5px;
   font-weight: 500;
 }
@@ -145,12 +156,12 @@
   border: 0;
   border-radius: 50%;
   background: none;
-  color: var(--ink);
+  color: var(--label);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition:
     background 180ms ease,
-    transform 140ms cubic-bezier(0.22, 1, 0.36, 1);
+    transform 140ms var(--spring);
 }
 
 .play {
@@ -161,11 +172,16 @@
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: var(--ink);
-  color: var(--card);
+  /* The only filled transport control, so it is glass one step brighter than the strip
+     it sits on rather than a solid — same treatment as the step buttons. */
+  background: var(--thumb);
+  box-shadow: var(--edge-soft);
+  color: var(--label);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 140ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition:
+    transform 140ms var(--spring),
+    background 140ms ease;
 }
 
 .skipBig {
@@ -179,12 +195,13 @@
 }
 
 .skip:hover:not(:disabled) {
-  background: var(--track);
+  background: var(--fill-2);
 }
 
 .skip:active:not(:disabled),
 .play:active:not(:disabled) {
-  transform: scale(0.9);
+  transform: scale(0.94);
+  background: var(--fill-2);
 }
 
 .skip:disabled,
@@ -198,7 +215,7 @@
 .expand:focus-visible,
 .close:focus-visible,
 .range:focus-visible {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--label);
   outline-offset: 2px;
 }
 
@@ -218,7 +235,7 @@
   border: 0;
   border-radius: 50%;
   background: none;
-  color: var(--muted);
+  color: var(--label-2);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition:
@@ -228,8 +245,8 @@
 
 .expand:hover,
 .close:hover {
-  background: var(--track);
-  color: var(--ink);
+  background: var(--fill-2);
+  color: var(--label);
 }
 
 .expand {
@@ -247,7 +264,7 @@
 
 .time {
   flex: none;
-  color: var(--muted);
+  color: var(--label-2);
   font-size: 11.5px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
@@ -258,7 +275,7 @@
   flex: 1;
   height: 4px;
   border-radius: 3px;
-  background: var(--track);
+  background: var(--fill);
   overflow: hidden;
 }
 
@@ -266,13 +283,13 @@
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: 3px;
-  background: var(--ink);
+  background: var(--label);
   transition: width 900ms linear;
 }
 
 /* Between tracks: keep the bar in place rather than snapping it back to nothing. */
 .loading .progress {
-  background: var(--muted);
+  background: var(--label-3);
 }
 
 /* ---- Expanded ---------------------------------------------------------------------- */
@@ -301,7 +318,7 @@
   width: 38px;
   height: 4px;
   border-radius: 2px;
-  background: var(--track);
+  background: var(--fill);
 }
 
 .close {
@@ -325,13 +342,13 @@
 }
 
 .bigArtist {
-  color: var(--ink);
+  color: var(--label);
   font-size: 13.5px;
   font-weight: 500;
 }
 
 .bigAlbum {
-  color: var(--muted);
+  color: var(--label-2);
   font-size: 12px;
   font-weight: 500;
 }
@@ -363,7 +380,7 @@
 
 .speaker {
   flex: none;
-  color: var(--muted);
+  color: var(--label-2);
 }
 
 /*
@@ -388,8 +405,8 @@
   border-radius: 3px;
   background: linear-gradient(
     to right,
-    var(--ink) var(--filled, 0%),
-    var(--track) var(--filled, 0%)
+    var(--label) var(--filled, 0%),
+    var(--fill) var(--filled, 0%)
   );
 }
 
@@ -398,8 +415,8 @@
   border-radius: 3px;
   background: linear-gradient(
     to right,
-    var(--ink) var(--filled, 0%),
-    var(--track) var(--filled, 0%)
+    var(--label) var(--filled, 0%),
+    var(--fill) var(--filled, 0%)
   );
 }
 
@@ -409,7 +426,7 @@
   margin-top: -5px;
   border: 0;
   border-radius: 50%;
-  background: var(--ink);
+  background: var(--label);
   -webkit-appearance: none;
   appearance: none;
 }
@@ -419,7 +436,7 @@
   height: 14px;
   border: 0;
   border-radius: 50%;
-  background: var(--ink);
+  background: var(--label);
 }
 
 .range:disabled {
