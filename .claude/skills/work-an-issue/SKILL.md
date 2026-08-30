@@ -166,8 +166,18 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
 
 ```bash
 git push -u origin <branch>
-gh pr create --title "..." --body "..."
+gh pr create --base main --title "..." --body "..."
 ```
+
+**Always `--base main`, and never stack a PR on another branch.** A PR based on a branch
+can be merged into *that branch*, which lands the change nowhere near `main` while the PR
+still reads as merged — and `Closes #<n>` silently does nothing, because a closing keyword
+only registers for a PR based on the default branch. #21 was lost that way and had to be
+re-landed by #17. A stacked PR gives a tidier diff; it is not worth this. The `base` job in
+CI fails on any PR whose base is not `main`.
+
+Prefer `git cherry-pick -x <sha>` over reimplementing when a change already exists on some
+branch: it keeps the original authorship and records where it came from.
 
 The body must contain **`Closes #<n>`** so the merge closes the issue. Then say what a
 reviewer actually needs:

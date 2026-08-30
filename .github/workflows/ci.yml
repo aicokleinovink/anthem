@@ -11,6 +11,27 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # A PR stacked on another branch can merge into *that branch* rather than into `main`,
+  # which loses the change silently: the PR reads as merged, its `Closes #n` never fires
+  # because closing keywords only register against the default branch, and nothing is red.
+  # That happened to #21. Catch it while the PR is open, when it is still cheap to fix.
+  base:
+    name: base
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Base branch must be main
+        env:
+          BASE: ${{ github.event.pull_request.base.ref }}
+        run: |
+          if [ "$BASE" != "main" ]; then
+            echo "::error::This PR targets '$BASE', not 'main'. Merging it would land the" \
+                 "change on that branch and never on main. Retarget it:" \
+                 "gh pr edit ${{ github.event.pull_request.number }} --base main"
+            exit 1
+          fi
+          echo "Base is main."
+
   api:
     name: api
     runs-on: ubuntu-latest
