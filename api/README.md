@@ -56,7 +56,7 @@ deeper and a relative hop from it would miss.
 | PUT | `/api/zones/:zone/speaker-profile` | `{ "profile": 1 }` (optionally `"input"`) | `{ input, selected }` |
 | GET | `/api/display` | | `{ info, options }` |
 | GET | `/api/events` | | Server-sent events: the whole state, on connect and on every change |
-| POST | `/api/player` | `{ "action": "play" \| "pause" \| "next" \| "previous" }` | `{ action }` |
+| POST | `/api/player` | `{ "action": "play" \| "pause" \| "next" \| "previous" }`, or `{ "action": "seek", "seconds": n }` | `{ action }` |
 | PUT | `/api/display` | `{ "info": 0 }` | `{ info, options }` |
 | PUT | `/api/tv` | `{ "target": "netflix" }` | `{ target }` |
 
@@ -144,7 +144,14 @@ One catch worth knowing: **the etag does not change as the position advances.** 
 can sit for a minute while the track quietly plays on, so the elapsed time has to be counted
 locally by the client and re-synced whenever an update does arrive.
 
-Transport goes to the Node's `/Play`, `/Pause`, `/Skip` and `/Back`.
+Transport goes to the Node's `/Play`, `/Pause`, `/Skip` and `/Back`. **Seeking is the same
+`/Play` endpoint with a `seek=<seconds>` query**, which is why it is not in the same table of
+actions as the others: it takes an argument and they do not.
+
+Whether the current track can be seeked at all is the Node's own `canSeek`, reported per
+track and passed straight through to the client. It is false for live radio and for services
+that stream without a seekable position, which makes it a better test than asking whether
+the track has a length.
 
 `connecting` — what the Node reports between tracks — is mapped to a `loading` state rather
 than to `stopped`. Treating it as stopped makes the player vanish and reappear on every

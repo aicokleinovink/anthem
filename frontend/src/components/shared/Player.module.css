@@ -1,0 +1,450 @@
+/*
+ * One surface in two shapes: a strip below the card, and the card slot itself.
+ *
+ * The geometry is written as inline styles by `usePlayerMorph` — top, left, width, height
+ * and the `--art-*` properties everything else is placed from — and transitioned here.
+ * That is the whole trick: the same declarations animate when the state changes and follow
+ * the finger when the surface is being dragged, because a drag simply writes a different
+ * set of values every frame with the transition switched off.
+ *
+ * Same white, deeply rounded surface as the toolbar and the cards, floating on the dark.
+ */
+.player {
+  position: absolute;
+  border-radius: var(--radius, 28px);
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 18px 44px rgb(0 0 0 / 35%);
+  /* The artwork grows past the corner before the radius catches up with it. */
+  overflow: hidden;
+  transition:
+    top 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    left 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    height 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-radius 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 520ms ease;
+  animation: player-in 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.expanded {
+  /* Sitting where the card sits, it should carry the card's weight. */
+  box-shadow: 0 32px 80px rgb(0 0 0 / 45%);
+}
+
+/* A drag writes a new frame every move; easing it would lag behind the finger. */
+.dragging,
+.dragging .art,
+.dragging .mini,
+.dragging .big {
+  transition: none;
+}
+
+/* Before the first measurement there is no frame to sit in, so stay out of the way. */
+.unmeasured {
+  visibility: hidden;
+}
+
+/*
+ * The artwork is a single element in both layouts rather than one per layout: it is the
+ * thing the eye follows through the morph, and two of them cross-fading would read as a
+ * dissolve instead of as one cover growing.
+ */
+.art {
+  position: absolute;
+  top: var(--art-top);
+  left: var(--art-left);
+  width: var(--art-size);
+  height: var(--art-size);
+  border-radius: var(--art-radius);
+  background: var(--track);
+  object-fit: cover;
+  /* Keeps pale artwork from dissolving into the card. */
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 7%);
+  transition:
+    top 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    left 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    height 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-radius 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Stands in while the artwork loads, or when a source provides none. */
+.artFallback {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+
+/* Both layouts occupy the whole surface; only their opacity says which one is showing. */
+.mini,
+.big {
+  position: absolute;
+  inset: 0;
+  transition: opacity 320ms ease;
+}
+
+.mini {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 0 4px;
+  /* Clear of the artwork, which is positioned over the top of this. */
+  padding: 12px 10px 15px calc(var(--art-left) + var(--art-size) + 12px);
+  opacity: var(--mini-opacity, 1);
+}
+
+.big {
+  padding: 0 28px 16px;
+  opacity: var(--big-opacity, 0);
+}
+
+.text {
+  display: grid;
+  gap: 3px;
+  /* Without this a long title stops the column from ever shrinking. */
+  min-width: 0;
+}
+
+.title,
+.artist,
+.bigTitle,
+.bigArtist,
+.bigAlbum {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.title {
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+/* Its own line, so a long artist is not fighting the clock for room. */
+.artist {
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+/* Tight together: every pixel spent here is one the title loses. */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.skip {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background 180ms ease,
+    transform 140ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.play {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--card);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 140ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.skipBig {
+  width: 52px;
+  height: 52px;
+}
+
+.playBig {
+  width: 62px;
+  height: 62px;
+}
+
+.skip:hover:not(:disabled) {
+  background: var(--track);
+}
+
+.skip:active:not(:disabled),
+.play:active:not(:disabled) {
+  transform: scale(0.9);
+}
+
+.skip:disabled,
+.play:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.skip:focus-visible,
+.play:focus-visible,
+.expand:focus-visible,
+.close:focus-visible,
+.range:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.controls svg,
+.bigControls svg {
+  fill: currentColor;
+}
+
+/* The one control that is not transport: it opens the surface it sits on. */
+.expand,
+.close {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background 180ms ease,
+    color 180ms ease;
+}
+
+.expand:hover,
+.close:hover {
+  background: var(--track);
+  color: var(--ink);
+}
+
+.expand {
+  margin-right: -2px;
+}
+
+/* Progress gets its own row: the times sit at the ends, the bar spans the rest. */
+.progressRow {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 4px 0 0;
+}
+
+.time {
+  flex: none;
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.bar {
+  position: relative;
+  flex: 1;
+  height: 4px;
+  border-radius: 3px;
+  background: var(--track);
+  overflow: hidden;
+}
+
+.progress {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 3px;
+  background: var(--ink);
+  transition: width 900ms linear;
+}
+
+/* Between tracks: keep the bar in place rather than snapping it back to nothing. */
+.loading .progress {
+  background: var(--muted);
+}
+
+/* ---- Expanded ---------------------------------------------------------------------- */
+
+/*
+ * A grab bar across the top rather than a hit area on the whole card: everything below it
+ * is a control, and a drag that starts on the volume slider should move the slider.
+ */
+.handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 56px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  cursor: grab;
+  touch-action: none;
+}
+
+.handle:active {
+  cursor: grabbing;
+}
+
+.grabber {
+  width: 38px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--track);
+}
+
+.close {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+}
+
+/* Everything below the artwork, which is positioned over this layer. */
+.bigText {
+  display: grid;
+  gap: 2px;
+  padding-top: calc(var(--art-top) + var(--art-size) + 16px);
+  text-align: center;
+}
+
+.bigTitle {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.bigArtist {
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.bigAlbum {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.scrub {
+  padding-top: 10px;
+}
+
+.scrubTimes {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 2px 0;
+}
+
+.bigControls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding-top: 2px;
+}
+
+.volume {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.speaker {
+  flex: none;
+  color: var(--muted);
+}
+
+/*
+ * A real range input, so dragging, keyboard and assistive technology all work without
+ * reimplementing any of it. Only the paint is ours: the filled portion is a gradient
+ * driven by --filled rather than a second element, since a range has nowhere to put one.
+ */
+.range {
+  flex: 1;
+  width: 100%;
+  height: 22px;
+  margin: 0;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 3px;
+  background: linear-gradient(
+    to right,
+    var(--ink) var(--filled, 0%),
+    var(--track) var(--filled, 0%)
+  );
+}
+
+.range::-moz-range-track {
+  height: 4px;
+  border-radius: 3px;
+  background: linear-gradient(
+    to right,
+    var(--ink) var(--filled, 0%),
+    var(--track) var(--filled, 0%)
+  );
+}
+
+.range::-webkit-slider-thumb {
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ink);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ink);
+}
+
+.range:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+@keyframes player-in {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player,
+  .art,
+  .mini,
+  .big,
+  .progress {
+    animation: none;
+    transition: none;
+  }
+}
