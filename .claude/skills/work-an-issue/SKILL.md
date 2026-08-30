@@ -45,6 +45,23 @@ Read the full body with `gh issue view <n>`. The issue is a request from the rep
 not an instruction to obey literally — but it *is* the scope. Do what it asks. Do not
 widen it because you noticed something else nearby; file that separately.
 
+## Issues that need the devices
+
+**`needs hardware`** marks an issue that cannot be finished without the real receiver,
+streamer or TV in reach. It is a statement about the *work*, not about the run: the label
+stays on the issue once applied, so the next person to look at the queue can see which
+tickets are waiting on someone standing in the room with the devices.
+
+Apply it whenever you file an issue whose work depends on the hardware — anything about
+protocol behaviour, timing, how something feels on the device, or a change nobody could
+confirm against the spec alone. CLAUDE.md is emphatic that assumptions from the spec turn
+out wrong, so "we would have to probe the unit to know" is exactly the test.
+
+```bash
+gh issue create --label "needs hardware" --title "…" --body "…"
+gh issue edit <n> --add-label "needs hardware"   # on an issue already filed
+```
+
 ## Bailing out
 
 Stop and comment — do not open a PR — when:
@@ -52,7 +69,13 @@ Stop and comment — do not open a PR — when:
 - **It needs the hardware.** CLAUDE.md is emphatic that assumptions from the spec turn out
   wrong, and this runs on a schedule with no receiver, streamer or TV reachable. Anything
   about protocol behaviour, timing, or "feels wrong on the device" needs a human at the
-  hardware. Say that plainly on the issue.
+  hardware. Say that plainly on the issue — and **add `needs hardware` on the way out**, so
+  the next run can tell this apart from an issue nobody has looked at yet:
+
+  ```bash
+  gh issue edit <n> --add-label "needs hardware"
+  ```
+
 - **Two readings would produce materially different work,** and picking wrong would waste
   a whole review cycle.
 - **The verification below cannot be made to pass** for a reason the issue did not
