@@ -72,11 +72,15 @@ The same trick works for anything else the unit's UI can do but the docs do not 
 ## Running and checking
 
 ```bash
-cd api && npm run dev          # API on :3000
-cd frontend && npm run dev     # UI on :5173, proxies /api
+npm run dev                    # both servers; open :5173, not :3000 (see below)
 cd api && npm test             # 27 tests, no hardware needed
 cd api && npm run probe        # read-only protocol probe against the real receiver
 ```
+
+`npm run dev` at the root starts `tsx watch` in `api/` and Vite in `frontend/`, clears
+both ports first, and kills both process groups on Ctrl+C. **Open :5173** — the API on
+:3000 serves `frontend/dist`, so on its own it shows the last build, which after a branch
+switch is silently stale.
 
 For a single process on one port: build the frontend, then `npm run build && npm start` in
 `api/`.

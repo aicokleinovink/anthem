@@ -16,15 +16,23 @@ connection to the receiver (a browser cannot open raw sockets).
 ## Run
 
 ```bash
-cd ../api && npm run dev     # must be running first
-cd ../frontend && npm run dev
+cd .. && npm run dev         # starts the API and Vite together
 ```
+
+Then open **`http://localhost:5173`**, not `:3000`. Both ports serve the app, but only one
+serves *this* working tree: `:5173` is Vite reading from source with hot reload, while the
+API on `:3000` serves `frontend/dist` — whatever was last built, which after a branch
+switch looks like the branch not working. `:3000` is for checking a build, nothing else.
 
 `vite.config.ts` proxies `/api` → `http://localhost:3000`, so the page is same-origin and
 there is no CORS to configure.
 
-On your phone: `npm run dev -- --host`, open `http://<your-mac>:5173`, then Add to Home
-Screen — it opens full-screen without Safari chrome.
+The two can still be started separately (`npm run dev` in `api/`, then here) when you want
+one of them alone; the API must be up either way.
+
+On your phone: the root command passes `--host`, so Vite prints a LAN address as well —
+open `http://<your-mac>:5173` there and Add to Home Screen, and it opens full-screen
+without Safari chrome.
 
 ## Devices and sections
 

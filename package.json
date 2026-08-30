@@ -1,0 +1,9 @@
+{
+  "name": "anthem",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Whole-repo commands for the Anthem remote; the packages install separately",
+  "scripts": {
+    "dev": "bash scripts/dev.sh"
+  }
+}
