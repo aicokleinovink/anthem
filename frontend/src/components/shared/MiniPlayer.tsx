@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { playerAction, type NowPlaying, type PlayerAction } from '../api';
+import { playerAction, type NowPlaying, type PlayerAction } from '../../api';
 import styles from './MiniPlayer.module.css';
 
 interface MiniPlayerProps {

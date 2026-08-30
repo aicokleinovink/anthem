@@ -1,7 +1,7 @@
-import { Card } from '../components/Card';
-import { Panel } from '../components/Panel';
-import { PillList } from '../components/PillList';
-import { SignalBars } from '../components/SignalBars';
+import { Card } from '../shared/Card';
+import { Panel } from '../shared/Panel';
+import { PillList } from '../shared/PillList';
+import { SignalBars } from '../shared/SignalBars';
 interface InputsController {
   inputs: Array<{ input: number; name: string }>;
   selected: number | null;

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useSlidingPill } from '../hooks/useSlidingPill';
+import { useSlidingPill } from '../../hooks/useSlidingPill';
 import styles from './PillList.module.css';
 
 export interface PillItem {
