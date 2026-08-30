@@ -66,6 +66,8 @@
   border-radius: var(--art-radius);
   background: var(--fill);
   object-fit: cover;
+  /* It sits over the strip's own button, and it is not itself a control. */
+  pointer-events: none;
   /* Now Playing's artwork sits in a well: a dark inner shadow round the edge so a pale
      cover has a rim, and the thumbnail reads as inset into the glass rather than laid
      on top of it. */
@@ -97,7 +99,7 @@
 
 .mini {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: 0 4px;
   /* Clear of the artwork, which is positioned over the top of this. */
@@ -108,6 +110,13 @@
 .big {
   padding: 0 28px 16px;
   opacity: var(--big-opacity, 0);
+}
+
+/* Above the strip's button, but not in the way of a tap meant for it. */
+.text,
+.progressRow {
+  position: relative;
+  pointer-events: none;
 }
 
 .text {
@@ -142,6 +151,7 @@
 
 /* Tight together: every pixel spent here is one the title loses. */
 .controls {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 1px;
@@ -212,11 +222,16 @@
 
 .skip:focus-visible,
 .play:focus-visible,
-.expand:focus-visible,
-.close:focus-visible,
 .range:focus-visible {
   outline: 2px solid var(--label);
   outline-offset: 2px;
+}
+
+/* Inset, because the surface it outlines runs to the very edge of the strip. */
+.expand:focus-visible,
+.handle:focus-visible {
+  outline: 2px solid var(--label);
+  outline-offset: -3px;
 }
 
 .controls svg,
@@ -224,33 +239,19 @@
   fill: currentColor;
 }
 
-/* The one control that is not transport: it opens the surface it sits on. */
-.expand,
-.close {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
+/*
+ * The whole strip is the control that opens the player, so it costs no room at all: an
+ * invisible button under the layout, with the transport buttons laid over the top of it.
+ */
+.expand {
+  position: absolute;
+  inset: 0;
   padding: 0;
   border: 0;
-  border-radius: 50%;
+  border-radius: inherit;
   background: none;
-  color: var(--label-2);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition:
-    background 180ms ease,
-    color 180ms ease;
-}
-
-.expand:hover,
-.close:hover {
-  background: var(--fill-2);
-  color: var(--label);
-}
-
-.expand {
-  margin-right: -2px;
 }
 
 /* Progress gets its own row: the times sit at the ends, the bar spans the rest. */
@@ -296,18 +297,24 @@
 
 /*
  * A grab bar across the top rather than a hit area on the whole card: everything below it
- * is a control, and a drag that starts on the volume slider should move the slider.
+ * is a control, and a drag that starts on the volume slider should move the slider. It is
+ * a button as well as a grab area, since dragging alone would leave no way to close the
+ * player without a pointer. Nothing else shares the row, so the pill centres itself.
  */
 .handle {
   position: absolute;
   top: 0;
   left: 0;
-  right: 56px;
+  right: 0;
   height: 30px;
   display: grid;
   place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
   cursor: grab;
   touch-action: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .handle:active {
@@ -319,12 +326,6 @@
   height: 4px;
   border-radius: 2px;
   background: var(--fill);
-}
-
-.close {
-  position: absolute;
-  top: 14px;
-  right: 18px;
 }
 
 /* Everything below the artwork, which is positioned over this layer. */

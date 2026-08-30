@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 
 /** The two shapes the player takes, measured from the slots it has to land in. */
@@ -18,6 +18,12 @@ export interface Morph {
   frame: { top: number; left: number; width: number; height: number } | null;
   /** Starts a drag-to-collapse from the expanded state. */
   onDragStart: (event: React.PointerEvent) => void;
+  /**
+   * Whether the gesture that just ended actually moved. The grab bar is also a button, so
+   * releasing a drag on it fires a click as well — and that click is the tail of the drag,
+   * not a press.
+   */
+  dragged: () => boolean;
 }
 
 const lerp = (from: number, to: number, t: number) => from + (to - from) * t;
@@ -26,6 +32,8 @@ const lerp = (from: number, to: number, t: number) => from + (to - from) * t;
 const SETTLE_AT = 0.62;
 /** A flick downwards closes regardless of how far it actually travelled, in px/ms. */
 const FLICK_VELOCITY = 0.55;
+/** Below this the finger never really left the spot, so it was a press and not a drag. */
+const DRAG_SLOP = 4;
 
 /**
  * Drives the player between the strip below the card and the card slot itself.
@@ -51,6 +59,7 @@ export function usePlayerMorph(
 ): Morph {
   const [slots, setSlots] = useState<{ open: Slot; shut: Slot } | null>(null);
   const [drag, setDrag] = useState<number | null>(null);
+  const moved = useRef(false);
 
   const measure = useCallback(() => {
     const shell = refs.shell.current;
@@ -94,13 +103,15 @@ export function usePlayerMorph(
 
       const startY = event.clientY;
       const startedAt = event.timeStamp;
+      moved.current = false;
       setDrag(1);
 
       // Listeners live for the length of the gesture rather than in an effect, so a drag
       // does not re-subscribe on every move.
-      const move = (moved: PointerEvent) => {
+      const move = (pointer: PointerEvent) => {
+        if (Math.abs(pointer.clientY - startY) > DRAG_SLOP) moved.current = true;
         // Downwards only: dragging up past the open position would stretch it past the card.
-        const dy = Math.max(0, moved.clientY - startY);
+        const dy = Math.max(0, pointer.clientY - startY);
         setDrag(Math.max(0, 1 - dy / travel));
       };
 
@@ -139,5 +150,6 @@ export function usePlayerMorph(
     dragging: drag !== null,
     frame: frame ?? null,
     onDragStart,
+    dragged: () => moved.current,
   };
 }

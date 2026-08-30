@@ -154,6 +154,19 @@ export function Player({
       */}
       {showMini && (
         <div className={styles.mini} inert={!mini} aria-hidden={!mini}>
+          {/*
+            The strip itself is what opens the player, so nothing has to spend room on a
+            chevron. It is a real button underneath the layout rather than a click handler
+            on the surface, so it can be tabbed to and announced — and it stays a sibling
+            of the transport buttons, because a button inside a button is invalid.
+          */}
+          <button
+            type="button"
+            className={styles.expand}
+            aria-label="Expand player"
+            onClick={onExpand}
+          />
+
           <div className={styles.text}>
             <span className={styles.title}>{now.title ?? 'Unknown track'}</span>
             <span className={styles.artist}>{now.artist ?? now.service ?? ''}</span>
@@ -168,24 +181,6 @@ export function Player({
             />
             <Skip direction="next" disabled={offline} onPress={() => send('next')} />
           </div>
-
-          <button
-            type="button"
-            className={styles.expand}
-            aria-label="Expand player"
-            onClick={onExpand}
-          >
-            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-              <path
-                d="M6.6 14.4L12 9l5.4 5.4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
 
           <div className={styles.progressRow}>
             <span className={styles.time}>{clock(position)}</span>
@@ -204,27 +199,22 @@ export function Player({
 
       {showBig && (
         <div className={styles.big} inert={mini} aria-hidden={mini}>
-          {/* The whole bar is the grab area; the button sits outside it so a tap is a tap. */}
-          <div className={styles.handle} onPointerDown={morph.onDragStart}>
-            <span className={styles.grabber} aria-hidden="true" />
-          </div>
-
+          {/*
+            The grab bar is also the control. Dragging is a pointer gesture with no
+            keyboard equivalent, so the bar is a button that collapses on click or Enter
+            as well as starting the drag — the same pill, honest about being operable.
+          */}
           <button
             type="button"
-            className={styles.close}
+            className={styles.handle}
             aria-label="Collapse player"
-            onClick={onCollapse}
+            onPointerDown={morph.onDragStart}
+            // A release at the end of a drag fires a click too; that one is not a press.
+            onClick={() => {
+              if (!morph.dragged()) onCollapse();
+            }}
           >
-            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-              <path
-                d="M6.6 9.6L12 15l5.4-5.4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <span className={styles.grabber} aria-hidden="true" />
           </button>
 
           <div className={styles.bigText}>
