@@ -1,3 +1,4 @@
+import type { Socket } from 'node:net';
 import express from 'express';
 import { createApp } from '../src/app.js';
 import { config } from '../src/config.js';
@@ -38,6 +39,17 @@ const server = createApp(receiver, player, tv).listen(config.httpPort, () => {
   console.log(`[fake] receiver on 127.0.0.1:${fake.port}`);
 });
 
+/**
+ * Open connections, so stopping the app can drop them. Closing an HTTP server only
+ * stops it accepting new ones — an event stream already in flight would stay open, and
+ * the UI would never notice the service had gone.
+ */
+const sockets = new Set<Socket>();
+server.on('connection', (socket) => {
+  sockets.add(socket);
+  socket.on('close', () => sockets.delete(socket));
+});
+
 const control = express();
 control.use(express.json());
 
@@ -63,6 +75,22 @@ control.post('/push', (req, res) => {
   const { frames } = req.body as { frames: string[] };
   fake.push(...frames);
   res.json({ ok: true });
+});
+
+/**
+ * Take the app away and bring it back, so the UI's own reconnection can be tested.
+ * The fakes and the receiver connection are untouched: only the HTTP listener cycles,
+ * which is what a service restart behind a proxy looks like from the browser.
+ */
+control.post('/app/stop', (_req, res) => {
+  if (server.listening) server.close();
+  for (const socket of sockets) socket.destroy();
+  res.json({ ok: true });
+});
+
+control.post('/app/start', (_req, res) => {
+  if (server.listening) return void res.json({ ok: true });
+  server.listen(config.httpPort, () => res.json({ ok: true }));
 });
 
 control.post('/player', (req, res) => {

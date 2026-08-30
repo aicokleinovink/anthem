@@ -40,6 +40,8 @@ test.describe('device groups', () => {
       await expect(page.getByRole('tab', { name })).toBeVisible();
     }
 
+    // Start on a different input, so the press is always a change.
+    await page.request.put('/api/input', { data: { input: 1 } });
     await page.getByRole('tab', { name: 'Inputs' }).click();
     await page.getByRole('button', { name: 'Streamer' }).click();
     await expect(page.getByRole('button', { name: 'Streamer' })).toHaveAttribute(

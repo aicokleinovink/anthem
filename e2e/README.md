@@ -51,8 +51,22 @@ the app — nothing test-only belongs in the thing under test. `tests/fixtures.t
 | `control.player(now)` | report a track, or `null` for nothing loaded |
 | `control.tv(available, current)` | report the set turning off, or landing somewhere |
 | `control.tvSelections()` / `control.playerActions()` | what those two were asked to do |
+| `control.stopApp()` / `control.startApp()` | take the app's HTTP listener away and bring it back |
 
 The log is reset before each test, so a test only ever sees what it caused.
+
+`stopApp` closes the listener **and destroys open connections**. Closing an HTTP server
+only stops it accepting new ones; the event stream already in flight would stay open and
+the UI would never notice the service had gone — which is the whole thing being tested.
+The fakes and the receiver connection are untouched, so it is a service restart, not a
+device going away.
+
+## What is covered
+
+Power, volume (stepping, an absolute set, press coalescing, mute), input selection, the
+speaker-profile off-by-one and the hiding of unnamed slots, the front panel display
+setting, the two device groups dispatching to the right device, now-playing, a change
+pushed by the receiver landing without a reload, and losing the API and recovering from it.
 
 ## Writing tests
 
@@ -63,6 +77,10 @@ The log is reset before each test, so a test only ever sees what it caused.
   `expect.poll(() => control.wire())`.
 - One worker, no parallelism: there is one app process with one set of fakes behind it, so
   parallel tests would change the volume under each other.
+- **Set up the state you are about to change.** The devices persist between tests, and
+  selecting the input or profile that is *already* selected is a no-op — so a test that
+  assumes a starting point passes without doing anything the moment something before it
+  changes. `npx playwright test --repeat-each=3` catches this; three tests needed it.
 - Out of scope here: screenshot regression (animations, plus the throttling described in
   CLAUDE.md, make snapshots flaky), error and reconnect paths, and anything needing hardware.
 

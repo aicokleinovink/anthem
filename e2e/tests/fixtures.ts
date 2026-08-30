@@ -21,6 +21,9 @@ export interface Control {
   /** Report a track, or `null` for nothing loaded. */
   player: (now: unknown) => Promise<void>;
   tv: (available: boolean, current: string | null) => Promise<void>;
+  /** Take the app's HTTP listener away, and bring it back. The devices keep running. */
+  stopApp: () => Promise<void>;
+  startApp: () => Promise<void>;
 }
 
 function control(api: APIRequestContext): Control {
@@ -37,6 +40,12 @@ function control(api: APIRequestContext): Control {
     },
     tv: async (available, current) => {
       await api.post('/tv', { data: { available, current } });
+    },
+    stopApp: async () => {
+      await api.post('/app/stop');
+    },
+    startApp: async () => {
+      await api.post('/app/start');
     },
   };
 }
