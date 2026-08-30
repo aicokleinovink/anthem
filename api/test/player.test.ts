@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { parseStatus } from '../src/player/bluos.js';
+import { parseStatus, seekUrl } from '../src/player/bluos.js';
 
 const BASE = 'http://192.168.2.15:11000';
 
@@ -23,6 +23,20 @@ test('reads a playing track', () => {
   assert.equal(now.elapsed, 129);
   assert.equal(now.duration, 290);
   assert.equal(now.service, 'Spotify');
+});
+
+test('reads whether the track can be seeked', () => {
+  const seekable = (xml: string) => parseStatus(xml, BASE).now.canSeek;
+  // Verified against the unit: Spotify Connect reports canSeek="1".
+  assert.equal(seekable('<status><canSeek>1</canSeek></status>'), true);
+  assert.equal(seekable('<status><canSeek>0</canSeek></status>'), false);
+  // Absent entirely — live radio — is not seekable.
+  assert.equal(seekable('<status><state>stream</state></status>'), false);
+});
+
+test('seeks to a whole second, never below zero', () => {
+  assert.equal(seekUrl(93.6), '/Play?seek=94');
+  assert.equal(seekUrl(-4), '/Play?seek=0');
 });
 
 test('maps the states we care about', () => {

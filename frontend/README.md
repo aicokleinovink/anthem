@@ -129,11 +129,12 @@ The header shows the format of the signal actually arriving (`Dolby D+`, `2.0 PC
 They are hidden entirely when there is no signal — as a static trio they read as an
 ellipsis rather than as an indicator.
 
-## The mini player
+## The player
 
-A bar below the card, visible whenever the streamer has something loaded and gone when it
+A strip below the card, visible whenever the streamer has something loaded and gone when it
 does not — with the same gap to the card as the toolbar has above it. Artwork, track,
-artist, elapsed and total time, a progress line, and previous / play-pause / next.
+artist, elapsed and total time, a progress line, and previous / play-pause / next. It
+expands into a full player; see below.
 
 The position **counts locally and re-syncs on every update**. The streamer's status only
 changes when something actually happens, so it does not report each passing second; a
@@ -147,6 +148,57 @@ moment, nothing at all — so the player used to blink out and back on every ski
 its entrance. Two things prevent that: `connecting` is treated as a track change rather than
 a stop, and `hooks/useSustained.ts` holds the last track for a few seconds when the streamer
 goes quiet.
+
+### Expanding it
+
+The chevron on the strip grows it into the card slot: the same size, the same corner radius
+and the same shadow as a section card, showing large artwork, the album, a scrub bar, bigger
+transport and the receiver's volume. It **only ever opens because you asked it to** — never
+on a track change, never on play.
+
+Three things close it, and the last two also do what you asked in the same tap: the chevron,
+a section tab, or the device switcher.
+
+**It is one element that changes shape, not two that cross-fade.** `hooks/usePlayerMorph.ts`
+measures the two slots — the card's `tabpanel` and an empty placeholder div where the strip
+sits — and writes the interpolated `top/left/width/height` onto the player as an inline
+style, which `Player.module.css` transitions. The artwork is a single element in both
+layouts for the same reason: it is what the eye follows, and two covers cross-fading at
+different sizes read as a dissolve rather than as one growing.
+
+Things worth knowing if you change this:
+
+- **The placeholder div is load-bearing.** The player is absolutely positioned over the
+  shell so it can travel; the placeholder is what keeps the space below the card reserved,
+  so nothing reflows when it leaves.
+- **A view transition would have been much less code and cannot be used here.** It plays
+  start to finish on its own, and dragging down to close needs the morph to be scrubbable —
+  the drag writes the same geometry the transition would have, frame by frame, with easing
+  switched off.
+- Only one layout is in the DOM at rest. Mid-morph both are, and the one on its way out is
+  `inert` — otherwise there would briefly be two "Pause" buttons, and any query for the
+  track title would be ambiguous.
+- The mini layout is placed *from the artwork* (`padding-left` off `--art-size`), so the two
+  layouts cannot drift apart as the cover grows.
+
+### Scrubbing and volume
+
+The scrub bar and the volume slider are real `<input type="range">` elements — dragging,
+keyboard and assistive technology all work without reimplementing any of it, and only the
+paint is ours. The filled portion is a gradient driven by a `--filled` custom property, since
+a range input has nowhere to hang a second element.
+
+**Seeking is committed on release, not on every value.** The position the finger is holding
+wins over the local counter until then, and the counter stops so the two are not fighting.
+Whether it is offered at all comes from the streamer's own `canSeek`, which is per track and
+false for live radio — a better test than "does it have a length".
+
+**The volume slider goes through the same coalescing as the buttons**, for a different
+reason: a drag produces a value per frame and only the last one matters. `useVolume` holds
+the most recent target while a request is in flight and sends only that one when the wire
+clears; both kinds of write share one in-flight slot, so a drag and a button press can never
+be on the wire at once. This is not optional — the receiver silently drops commands that
+arrive too fast.
 
 ## TV
 
@@ -256,6 +308,7 @@ place, so every card would slide its pill in on load.
 src/api.ts                     typed client for the API
 src/hooks/useReceiver.ts       the event stream: snapshots, reconnection, optimistic writes
 src/hooks/useVolume.ts         volume level and press coalescing
+src/hooks/usePlayerMorph.ts    the player's geometry between the strip and the card slot
 src/components/shared/         Card, Panel, Toolbar, DeviceSwitcher, PowerButton, PillList, …
 src/components/pages/          one card per device section
 src/styles/global.css          tokens, reset, shared keyframes

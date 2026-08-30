@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events';
 import { config } from '../config.js';
-import { ACTIONS, parseStatus, type Action, type NowPlaying } from './bluos.js';
+import { ACTIONS, parseStatus, seekUrl, type Action, type NowPlaying } from './bluos.js';
 
 /** How long the Node holds a status request open waiting for a change. */
 const LONG_POLL_SECONDS = 60;
@@ -44,6 +44,18 @@ export class Player extends EventEmitter {
     if (!this.baseUrl) throw new Error('No streamer configured');
     const response = await fetch(`${this.baseUrl}${ACTIONS[action]}`);
     if (!response.ok) throw new Error(`Streamer rejected ${action}: ${response.status}`);
+  }
+
+  /**
+   * Jump to a position in the current track.
+   *
+   * The Node reports the new position on its own status a moment later, like every other
+   * transport action, so nothing is echoed back here.
+   */
+  async seek(seconds: number): Promise<void> {
+    if (!this.baseUrl) throw new Error('No streamer configured');
+    const response = await fetch(`${this.baseUrl}${seekUrl(seconds)}`);
+    if (!response.ok) throw new Error(`Streamer rejected seek: ${response.status}`);
   }
 
   async #follow(): Promise<void> {

@@ -23,6 +23,11 @@ export class FakePlayer extends Player {
     this.actions.push(action);
   }
 
+  /** Logged with its position, since where it seeked to is the whole point. */
+  override async seek(seconds: number): Promise<void> {
+    this.actions.push(`seek:${seconds}`);
+  }
+
   /** Report a track — the same event the long-poll would have produced. */
   set(now: NowPlaying | null): void {
     this.now = now;
