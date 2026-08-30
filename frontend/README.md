@@ -200,6 +200,39 @@ clears; both kinds of write share one in-flight slot, so a drag and a button pre
 be on the wire at once. This is not optional — the receiver silently drops commands that
 arrive too fast.
 
+## The artwork backdrop
+
+While something is playing, the whole viewport takes its colour from the album art: the
+cover, blown up and blurred past recognition, behind the cards. It is a mood, not a picture
+— CarPlay's now-playing background is the reference. With nothing playing, no cover, or a
+cover that fails to load, it cross-fades back to the plain canvas and the app looks exactly
+as it did before.
+
+`components/shared/Backdrop.tsx`, one fixed element behind everything and a `tinted` class
+on the shell. No other component knows it exists.
+
+Four things about it are deliberate:
+
+- **It is blurred small and then scaled up, not blurred at full size.** Filters apply
+  before transforms, so blurring a `20vmax` box and scaling it 7.5× costs a fraction of a
+  120px blur across the viewport and looks the same. It also fixes the edges: a blur samples
+  nothing outside its own element, so an image at viewport size fades to transparent at the
+  border and the corners go flat.
+- **Two layers, not one `src` swap**, or a track change would cut instead of fading. The
+  outgoing cover stays mounted underneath while the incoming one fades in, and a layer only
+  fades in once it has actually decoded — otherwise the transition starts against nothing.
+- **Nothing samples the image.** The art comes from a service CDN or the Node, so a canvas
+  read would be cross-origin tainted. A blur needs no such access, and keeping the cover's
+  own gradients is what makes it read as organic rather than as a flat wash.
+- **The white surfaces stop assuming a dark ground.** `--shadow-card` and `--shadow-strip`
+  are swapped by `.tinted` for a tighter shadow plus a hairline of light along the top edge,
+  so a card still has an edge against a pale cover. That is why the three shadows in the app
+  are tokens rather than literals.
+
+A flat scrim at 42% and a vignette hold the whole thing down near the canvas colour. That is
+what keeps a garish cover from taking over — and it is also why a very dark cover produces
+almost no visible effect, which is expected rather than a bug.
+
 ## TV
 
 Under the TV device, `Inputs` is the set's own sources. Four pills — HDMI 1, PlayStation, YouTube, Netflix — switching the LG set's input or
