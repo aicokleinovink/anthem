@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useLayoutEffect, useState } from "react";
-import type { RefObject } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import type { RefObject } from 'react';
 
 /** The two shapes the player takes, measured from the slots it has to land in. */
 interface Slot {
@@ -105,9 +105,9 @@ export function usePlayerMorph(
       };
 
       const release = (ended: PointerEvent) => {
-        window.removeEventListener("pointermove", move);
-        window.removeEventListener("pointerup", release);
-        window.removeEventListener("pointercancel", release);
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', release);
+        window.removeEventListener('pointercancel', release);
         setDrag(null);
 
         const dy = ended.clientY - startY;
@@ -118,9 +118,9 @@ export function usePlayerMorph(
         if (remaining < SETTLE_AT || velocity > FLICK_VELOCITY) onCollapse();
       };
 
-      window.addEventListener("pointermove", move);
-      window.addEventListener("pointerup", release);
-      window.addEventListener("pointercancel", release);
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', release);
+      window.addEventListener('pointercancel', release);
     },
     [expanded, slots, onCollapse],
   );

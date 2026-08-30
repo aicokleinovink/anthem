@@ -1,17 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  selectInput,
-  selectTvTarget,
-  setDisplay,
-  setPower,
-  setSpeakerProfile,
-} from "./api";
-import { InputsCard } from "./components/pages/InputsCard";
-import { SettingsCard } from "./components/pages/SettingsCard";
-import { TvCard } from "./components/pages/TvCard";
-import { VolumeCard } from "./components/pages/VolumeCard";
-import { DeviceSwitcher } from "./components/shared/DeviceSwitcher";
-import { Player } from "./components/shared/Player";
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { selectInput, selectTvTarget, setDisplay, setPower, setSpeakerProfile } from './api';
+import { InputsCard } from './components/pages/InputsCard';
+import { SettingsCard } from './components/pages/SettingsCard';
+import { TvCard } from './components/pages/TvCard';
+import { VolumeCard } from './components/pages/VolumeCard';
+import { DeviceSwitcher } from './components/shared/DeviceSwitcher';
+import { Player } from './components/shared/Player';
 import {
   DEVICES,
   SECTIONS,
@@ -19,12 +13,12 @@ import {
   Toolbar,
   type Device,
   type Section,
-} from "./components/shared/Toolbar";
-import { usePlayerMorph } from "./hooks/usePlayerMorph";
-import { useReceiver } from "./hooks/useReceiver";
-import { useSustained } from "./hooks/useSustained";
-import { useVolume } from "./hooks/useVolume";
-import styles from "./App.module.css";
+} from './components/shared/Toolbar';
+import { usePlayerMorph } from './hooks/usePlayerMorph';
+import { useReceiver } from './hooks/useReceiver';
+import { useSustained } from './hooks/useSustained';
+import { useVolume } from './hooks/useVolume';
+import styles from './App.module.css';
 
 /**
  * Factory slot names. The receiver always reports four profiles; the ones nobody has
@@ -36,9 +30,9 @@ const UNNAMED = /^Profile\d+$/;
 const PLAYER_HOLD_MS = 4000;
 
 export default function App() {
-  const [device, setDevice] = useState<Device>("anthem");
-  const [section, setSection] = useState<Section>("volume");
-  const [direction, setDirection] = useState<"right" | "left">("right");
+  const [device, setDevice] = useState<Device>('anthem');
+  const [section, setSection] = useState<Section>('volume');
+  const [direction, setDirection] = useState<'right' | 'left'>('right');
   /** The player only ever opens because someone asked it to — never on a track change. */
   const [expanded, setExpanded] = useState(false);
 
@@ -85,10 +79,7 @@ export default function App() {
       write(
         // The format belongs to the old source; drop it until the receiver reports
         // what is arriving on the new one.
-        {
-          ...snapshot,
-          inputs: { ...snapshot.inputs, selected: input, format: null },
-        },
+        { ...snapshot, inputs: { ...snapshot.inputs, selected: input, format: null } },
         () => selectInput(input),
       );
     },
@@ -104,10 +95,7 @@ export default function App() {
     select: (value: number) => {
       if (!snapshot || value === snapshot.speakerProfile.selected) return;
       write(
-        {
-          ...snapshot,
-          speakerProfile: { ...snapshot.speakerProfile, selected: value },
-        },
+        { ...snapshot, speakerProfile: { ...snapshot.speakerProfile, selected: value } },
         () => setSpeakerProfile(value),
       );
     },
@@ -119,9 +107,7 @@ export default function App() {
     targets: snapshot?.tv.targets ?? [],
     select: (target: string) => {
       if (!snapshot || target === snapshot.tv.current) return;
-      write({ ...snapshot, tv: { ...snapshot.tv, current: target } }, () =>
-        selectTvTarget(target),
-      );
+      write({ ...snapshot, tv: { ...snapshot.tv, current: target } }, () => selectTvTarget(target));
     },
   };
 
@@ -130,9 +116,7 @@ export default function App() {
     info: snapshot?.display.info ?? null,
     select: (info: number) => {
       if (!snapshot || info === snapshot.display.info) return;
-      write({ ...snapshot, display: { ...snapshot.display, info } }, () =>
-        setDisplay(info),
-      );
+      write({ ...snapshot, display: { ...snapshot.display, info } }, () => setDisplay(info));
     },
   };
 
@@ -144,18 +128,14 @@ export default function App() {
   // goes where you asked, rather than making you close it first.
   const select = (next: Section) => {
     setExpanded(false);
-    setDirection(
-      sections.indexOf(next) > sections.indexOf(section) ? "right" : "left",
-    );
+    setDirection(sections.indexOf(next) > sections.indexOf(section) ? 'right' : 'left');
     setSection(next);
   };
 
   const selectDevice = (next: Device) => {
     if (next === device) return;
     setExpanded(false);
-    setDirection(
-      DEVICES.indexOf(next) > DEVICES.indexOf(device) ? "right" : "left",
-    );
+    setDirection(DEVICES.indexOf(next) > DEVICES.indexOf(device) ? 'right' : 'left');
     setDevice(next);
     // Inputs exists under both devices and means the same thing there — that device's
     // sources — so it carries across; anything else falls back to the device's first
@@ -190,7 +170,7 @@ export default function App() {
           replay when switching between them.
         */}
         <div
-          className={`${styles.stage} ${direction === "left" ? styles.stageLeft : ""}`}
+          className={`${styles.stage} ${direction === 'left' ? styles.stageLeft : ''}`}
           id={SECTION_PANEL_ID}
           role="tabpanel"
           aria-labelledby={`tab-${section}`}
@@ -199,26 +179,16 @@ export default function App() {
           // put a screenful of hidden controls in the tab order behind it.
           inert={expanded}
         >
-          {device === "tv" && section === "inputs" && (
+          {device === 'tv' && section === 'inputs' && (
             <TvCard key="tv-inputs" controller={tv} offline={offline} />
           )}
-          {device === "anthem" && section === "volume" && (
-            <VolumeCard
-              key="volume"
-              controller={volume}
-              powerOn={power}
-              offline={offline}
-            />
+          {device === 'anthem' && section === 'volume' && (
+            <VolumeCard key="volume" controller={volume} powerOn={power} offline={offline} />
           )}
-          {device === "anthem" && section === "inputs" && (
-            <InputsCard
-              key="inputs"
-              controller={inputs}
-              powerOn={power}
-              offline={offline}
-            />
+          {device === 'anthem' && section === 'inputs' && (
+            <InputsCard key="inputs" controller={inputs} powerOn={power} offline={offline} />
           )}
-          {device === "anthem" && section === "settings" && (
+          {device === 'anthem' && section === 'settings' && (
             <SettingsCard
               key="settings"
               profiles={profiles}
@@ -234,9 +204,7 @@ export default function App() {
           move between the two slots. This empty div is the slot it collapses to: it keeps
           the space below the card reserved whether the player is down here or not.
         */}
-        {playing && (
-          <div className={styles.strip} ref={stripRef} aria-hidden="true" />
-        )}
+        {playing && <div className={styles.strip} ref={stripRef} aria-hidden="true" />}
         {playing && (
           <Player
             now={playing}

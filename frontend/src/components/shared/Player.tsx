@@ -1,14 +1,8 @@
-import { useEffect, useState } from "react";
-import {
-  MIN_DB,
-  playerAction,
-  seekPlayer,
-  type NowPlaying,
-  type PlayerAction,
-} from "../../api";
-import type { VolumeController } from "../../hooks/useVolume";
-import type { Morph } from "../../hooks/usePlayerMorph";
-import styles from "./Player.module.css";
+import { useEffect, useState } from 'react';
+import { MIN_DB, playerAction, seekPlayer, type NowPlaying, type PlayerAction } from '../../api';
+import type { VolumeController } from '../../hooks/useVolume';
+import type { Morph } from '../../hooks/usePlayerMorph';
+import styles from './Player.module.css';
 
 interface PlayerProps {
   now: NowPlaying;
@@ -25,7 +19,7 @@ interface PlayerProps {
 
 function clock(seconds: number): string {
   const whole = Math.max(0, Math.floor(seconds));
-  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
+  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`;
 }
 
 const lerp = (from: number, to: number, t: number) => from + (to - from) * t;
@@ -67,19 +61,17 @@ export function Player({
 
   useEffect(() => {
     // While a finger is on the scrub handle the counter would be fighting it.
-    if (now.state !== "playing" || scrubbing !== null) return;
+    if (now.state !== 'playing' || scrubbing !== null) return;
     const timer = setInterval(() => {
-      setElapsed((current) =>
-        now.duration ? Math.min(current + 1, now.duration) : current + 1,
-      );
+      setElapsed((current) => (now.duration ? Math.min(current + 1, now.duration) : current + 1));
     }, 1000);
     return () => clearInterval(timer);
   }, [now.state, now.duration, scrubbing !== null]);
 
   useEffect(() => setArtworkFailed(false), [now.image]);
 
-  const playing = now.state === "playing";
-  const loading = now.state === "loading";
+  const playing = now.state === 'playing';
+  const loading = now.state === 'loading';
   const position = scrubbing ?? elapsed;
   const fraction = now.duration ? Math.min(position / now.duration, 1) : 0;
   const seekable = now.canSeek && now.duration !== null && !offline;
@@ -104,24 +96,21 @@ export function Player({
 
   // Everything inside is placed from the artwork, so the two layouts cannot drift apart
   // as it grows. The values go out as custom properties and the stylesheet reads them.
-  const large = Math.max(
-    0,
-    Math.min(width - ART.large.margin * 2, ART.large.max),
-  );
+  const large = Math.max(0, Math.min(width - ART.large.margin * 2, ART.large.max));
   const artSize = lerp(ART.small.size, large, p);
   const artTop = lerp(ART.small.top, ART.large.top, p);
   const artLeft = lerp(ART.small.top, (width - artSize) / 2, p);
 
   const surface = {
     ...morph.frame,
-    "--art-size": `${artSize}px`,
-    "--art-top": `${artTop}px`,
-    "--art-left": `${artLeft}px`,
-    "--art-radius": `${lerp(ART.small.radius, ART.large.radius, p)}px`,
-    "--radius": `${lerp(28, 44, p)}px`,
+    '--art-size': `${artSize}px`,
+    '--art-top': `${artTop}px`,
+    '--art-left': `${artLeft}px`,
+    '--art-radius': `${lerp(ART.small.radius, ART.large.radius, p)}px`,
+    '--radius': `${lerp(28, 44, p)}px`,
     // Each layout is gone before the other arrives, so they never overlap mid-morph.
-    "--mini-opacity": Math.max(0, 1 - p * 2.4),
-    "--big-opacity": Math.max(0, (p - 0.55) / 0.45),
+    '--mini-opacity': Math.max(0, 1 - p * 2.4),
+    '--big-opacity': Math.max(0, (p - 0.55) / 0.45),
   } as React.CSSProperties;
 
   const mini = p < 0.5;
@@ -137,31 +126,19 @@ export function Player({
     <section
       className={[
         styles.player,
-        loading ? styles.loading : "",
-        expanded ? styles.expanded : "",
-        morph.dragging ? styles.dragging : "",
-        morph.frame ? "" : styles.unmeasured,
-      ].join(" ")}
+        loading ? styles.loading : '',
+        expanded ? styles.expanded : '',
+        morph.dragging ? styles.dragging : '',
+        morph.frame ? '' : styles.unmeasured,
+      ].join(' ')}
       style={surface}
       aria-label="Now playing"
     >
       {now.image && !artworkFailed ? (
-        <img
-          className={styles.art}
-          src={now.image}
-          alt=""
-          onError={() => setArtworkFailed(true)}
-        />
+        <img className={styles.art} src={now.image} alt="" onError={() => setArtworkFailed(true)} />
       ) : (
-        <div
-          className={`${styles.art} ${styles.artFallback}`}
-          aria-hidden="true"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            width={`${Math.round(artSize * 0.42)}`}
-            fill="currentColor"
-          >
+        <div className={`${styles.art} ${styles.artFallback}`} aria-hidden="true">
+          <svg viewBox="0 0 24 24" width={`${Math.round(artSize * 0.42)}`} fill="currentColor">
             <path d="M9 18V5l10-2v13" />
             <circle cx="6.5" cy="18" r="2.5" />
             <circle cx="16.5" cy="16" r="2.5" />
@@ -177,28 +154,18 @@ export function Player({
       {showMini && (
         <div className={styles.mini} inert={!mini} aria-hidden={!mini}>
           <div className={styles.text}>
-            <span className={styles.title}>{now.title ?? "Unknown track"}</span>
-            <span className={styles.artist}>
-              {now.artist ?? now.service ?? ""}
-            </span>
+            <span className={styles.title}>{now.title ?? 'Unknown track'}</span>
+            <span className={styles.artist}>{now.artist ?? now.service ?? ''}</span>
           </div>
 
           <div className={styles.controls}>
-            <Skip
-              direction="previous"
-              disabled={offline}
-              onPress={() => send("previous")}
-            />
+            <Skip direction="previous" disabled={offline} onPress={() => send('previous')} />
             <PlayPause
               playing={playing}
               disabled={offline}
-              onPress={() => send(playing ? "pause" : "play")}
+              onPress={() => send(playing ? 'pause' : 'play')}
             />
-            <Skip
-              direction="next"
-              disabled={offline}
-              onPress={() => send("next")}
-            />
+            <Skip direction="next" disabled={offline} onPress={() => send('next')} />
           </div>
 
           <button
@@ -229,9 +196,7 @@ export function Player({
               />
             </span>
             {/* Live radio has no length, so there is nothing to count towards. */}
-            <span className={styles.time}>
-              {now.duration ? clock(now.duration) : "live"}
-            </span>
+            <span className={styles.time}>{now.duration ? clock(now.duration) : 'live'}</span>
           </div>
         </div>
       )}
@@ -262,12 +227,8 @@ export function Player({
           </button>
 
           <div className={styles.bigText}>
-            <span className={styles.bigTitle}>
-              {now.title ?? "Unknown track"}
-            </span>
-            <span className={styles.bigArtist}>
-              {now.artist ?? now.service ?? ""}
-            </span>
+            <span className={styles.bigTitle}>{now.title ?? 'Unknown track'}</span>
+            <span className={styles.bigArtist}>{now.artist ?? now.service ?? ''}</span>
             {now.album && <span className={styles.bigAlbum}>{now.album}</span>}
           </div>
 
@@ -281,9 +242,7 @@ export function Player({
               value={now.duration ? Math.min(position, now.duration) : 0}
               disabled={!seekable}
               aria-label="Seek"
-              style={
-                { "--filled": `${fraction * 100}%` } as React.CSSProperties
-              }
+              style={{ '--filled': `${fraction * 100}%` } as React.CSSProperties}
               onChange={(event) => setScrubbing(Number(event.target.value))}
               onPointerUp={commitSeek}
               onKeyUp={commitSeek}
@@ -292,30 +251,20 @@ export function Player({
             <div className={styles.scrubTimes}>
               <span className={styles.time}>{clock(position)}</span>
               <span className={styles.time}>
-                {now.duration ? `−${clock(now.duration - position)}` : "live"}
+                {now.duration ? `−${clock(now.duration - position)}` : 'live'}
               </span>
             </div>
           </div>
 
           <div className={styles.bigControls}>
-            <Skip
-              direction="previous"
-              big
-              disabled={offline}
-              onPress={() => send("previous")}
-            />
+            <Skip direction="previous" big disabled={offline} onPress={() => send('previous')} />
             <PlayPause
               big
               playing={playing}
               disabled={offline}
-              onPress={() => send(playing ? "pause" : "play")}
+              onPress={() => send(playing ? 'pause' : 'play')}
             />
-            <Skip
-              direction="next"
-              big
-              disabled={offline}
-              onPress={() => send("next")}
-            />
+            <Skip direction="next" big disabled={offline} onPress={() => send('next')} />
           </div>
 
           <Volume volume={volume} disabled={offline} />
@@ -326,13 +275,7 @@ export function Player({
 }
 
 /** The receiver's level, not the streamer's — the only thing here that is not the player. */
-function Volume({
-  volume,
-  disabled,
-}: {
-  volume: VolumeController;
-  disabled: boolean;
-}) {
+function Volume({ volume, disabled }: { volume: VolumeController; disabled: boolean }) {
   const { displayDb, maxDb, muted, set } = volume;
   const ready = displayDb !== null;
   const fraction = ready ? (displayDb - MIN_DB) / (maxDb - MIN_DB) : 0;
@@ -350,7 +293,7 @@ function Volume({
         disabled={disabled || !ready}
         aria-label="Volume"
         aria-valuetext={ready ? `${displayDb} decibels` : undefined}
-        style={{ "--filled": `${fraction * 100}%` } as React.CSSProperties}
+        style={{ '--filled': `${fraction * 100}%` } as React.CSSProperties}
         onChange={(event) => set(Number(event.target.value))}
       />
       <Speaker level={muted ? 0 : 2} />
@@ -360,13 +303,7 @@ function Volume({
 
 function Speaker({ level }: { level: number }) {
   return (
-    <svg
-      className={styles.speaker}
-      viewBox="0 0 24 24"
-      width="15"
-      height="15"
-      aria-hidden="true"
-    >
+    <svg className={styles.speaker} viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
       <path d="M4 9.5h3.4L12 5.6v12.8L7.4 14.5H4z" fill="currentColor" />
       {level > 0 && (
         <path
@@ -387,7 +324,7 @@ function Skip({
   big,
   onPress,
 }: {
-  direction: "previous" | "next";
+  direction: 'previous' | 'next';
   disabled: boolean;
   big?: boolean;
   onPress: () => void;
@@ -396,13 +333,13 @@ function Skip({
   return (
     <button
       type="button"
-      className={`${styles.skip} ${big ? styles.skipBig : ""}`}
+      className={`${styles.skip} ${big ? styles.skipBig : ''}`}
       disabled={disabled}
-      aria-label={direction === "next" ? "Next track" : "Previous track"}
+      aria-label={direction === 'next' ? 'Next track' : 'Previous track'}
       onClick={onPress}
     >
       <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true">
-        {direction === "next" ? (
+        {direction === 'next' ? (
           <path d="M14.8 6H17v12h-2.2zM4 6l9.2 6L4 18z" />
         ) : (
           <path d="M7 6h2.2v12H7zM20 6v12l-9.2-6z" />
@@ -427,9 +364,9 @@ function PlayPause({
   return (
     <button
       type="button"
-      className={`${styles.play} ${big ? styles.playBig : ""}`}
+      className={`${styles.play} ${big ? styles.playBig : ''}`}
       disabled={disabled}
-      aria-label={playing ? "Pause" : "Play"}
+      aria-label={playing ? 'Pause' : 'Play'}
       onClick={onPress}
     >
       {playing ? (
