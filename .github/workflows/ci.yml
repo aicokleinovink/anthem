@@ -46,3 +46,45 @@ jobs:
       # `vite build` runs `tsc -b` first, so this typechecks and bundles in one step.
       - run: npm run build
         working-directory: frontend
+
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            api/package-lock.json
+            frontend/package-lock.json
+            e2e/package-lock.json
+      - run: npm ci
+        working-directory: api
+      - run: npm ci
+        working-directory: frontend
+      - run: npm ci
+        working-directory: e2e
+
+      # The browser download is the slow part; the OS libraries it needs are not cached.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('e2e/package-lock.json') }}
+      # Chromium only: one engine is enough for a self-hosted remote.
+      - run: npx playwright install --with-deps chromium
+        working-directory: e2e
+
+      # Builds the frontend and starts the app against fake devices — no hardware.
+      - run: npm run e2e
+        working-directory: e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+          retention-days: 7
