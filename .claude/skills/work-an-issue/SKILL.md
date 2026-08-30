@@ -11,6 +11,21 @@ the PR is the review gate, and `main` is protected so a red build cannot land.
 This runs unattended on a schedule, so there is nobody to answer a question mid-run.
 When something needs a human, say so on the issue and stop — see [Bailing out](#bailing-out).
 
+## Clearing the whole queue
+
+One issue per run is deliberate: each one starts from a clean `main` and a fresh context.
+To work through everything that is ready, drive it from outside rather than changing the
+skill:
+
+```
+/loop /work-an-issue
+```
+
+It is safe to repeat. Each pass claims its issue with `--add-assignee @me` before starting
+and skips anything already assigned or already linked to an open PR, so a run that begins
+while another is still working leaves that issue alone. The loop ends by itself: once
+nothing qualifies, a run says so and stops without doing any work.
+
 ## Pick the issue
 
 ```bash
