@@ -20,6 +20,12 @@ export interface NowPlaying {
   /** Seconds into the track, and its length — absent for live radio. */
   elapsed: number | null;
   duration: number | null;
+  /**
+   * Whether the Node will accept a seek for what is playing. Reported per track, and
+   * false for live radio and for services that stream without a seekable position, so
+   * it is a better test than "does it have a duration".
+   */
+  canSeek: boolean;
 }
 
 const FIELDS = [
@@ -33,6 +39,7 @@ const FIELDS = [
   'service',
   'secs',
   'totlen',
+  'canSeek',
 ] as const;
 
 type Field = (typeof FIELDS)[number];
@@ -93,6 +100,7 @@ export function parseStatus(xml: string, baseUrl: string): { now: NowPlaying; et
       service: values.service ? decode(values.service) : null,
       elapsed: number(values.secs),
       duration: number(values.totlen),
+      canSeek: values.canSeek === '1',
     },
   };
 }
@@ -106,3 +114,9 @@ export const ACTIONS = {
 } as const;
 
 export type Action = keyof typeof ACTIONS;
+
+/**
+ * Seeking is `/Play?seek=<seconds>` — the same endpoint as plain play, which is why it
+ * is not in ACTIONS: it takes an argument and the others do not.
+ */
+export const seekUrl = (seconds: number) => `/Play?seek=${Math.max(0, Math.round(seconds))}`;

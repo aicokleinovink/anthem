@@ -19,6 +19,28 @@
      It is the natural height of the volume card, which is the tallest. */
   --card-height: 442px;
 
+  /*
+   * White surfaces float on a dark canvas, so one soft dark shadow is enough to lift them.
+   * With the artwork backdrop on, the ground behind can be any colour and any lightness,
+   * and a soft dark shadow alone can disappear against a pale cover — so `.tinted` swaps
+   * in a tighter shadow plus a hairline of light along the top edge, which gives the card
+   * an actual edge whatever is behind it.
+   */
+  --shadow-card: 0 32px 80px rgb(0 0 0 / 45%);
+  --shadow-strip: 0 18px 44px rgb(0 0 0 / 35%);
+}
+
+/* Set on the shell while album art is showing behind the UI. */
+.tinted {
+  --shadow-card:
+    0 1px 0 rgb(255 255 255 / 55%),
+    0 2px 6px rgb(0 0 0 / 22%),
+    0 24px 60px rgb(0 0 0 / 40%);
+  --shadow-strip:
+    0 1px 0 rgb(255 255 255 / 55%),
+    0 2px 5px rgb(0 0 0 / 20%),
+    0 14px 36px rgb(0 0 0 / 32%);
+
   color-scheme: dark;
 }
 
