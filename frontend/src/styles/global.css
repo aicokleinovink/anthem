@@ -63,10 +63,6 @@
   --fill-2: rgb(120 120 128 / 18%);
   /* A selection thumb is brighter glass, never a solid: it still shows the art through. */
   --thumb: rgb(255 255 255 / 18%);
-  /* The one genuinely opaque fill, for a control that is switched on. */
-  --on: rgb(255 255 255 / 92%);
-  --on-label: #101014;
-
   /* Every section card is this tall, so switching tabs never resizes the surface.
      It is the natural height of the volume card, which is the tallest. */
   --card-height: 442px;
