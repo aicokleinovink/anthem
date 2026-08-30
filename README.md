@@ -29,13 +29,17 @@ npm run build && npm start
 Open `http://localhost:3000`. From your phone, use the machine's LAN address —
 `http://<your-machine>:3000` — then Add to Home Screen.
 
-**While developing**, run the two separately so the UI hot-reloads. Vite serves the app and
-proxies `/api` to the service, which then skips serving any build it finds:
+**While developing**, one command from the repo root starts both servers, clears the ports
+first, and stops both on Ctrl+C:
 
 ```bash
-cd api && npm run dev
-cd frontend && npm run dev
+npm run dev
 ```
+
+Open **`http://localhost:5173`** — that is Vite, serving from source with hot reload and
+proxying `/api` to the service. Port 3000 is the API, and on its own it serves the *last
+frontend build*, so after switching branches it shows something silently stale; use it only
+when you mean to check a build.
 
 The receiver needs **standby IP control enabled**, or it will not answer while it is off —
 which also means power-on over IP will not work.
