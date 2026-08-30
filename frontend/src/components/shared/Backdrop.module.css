@@ -1,0 +1,67 @@
+/*
+ * The artwork, blown up and blurred past recognition, behind everything. It is meant to
+ * read as a colour temperature for the room rather than as a picture.
+ */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: var(--canvas);
+  pointer-events: none;
+}
+
+/*
+ * Blurred small, then scaled up — not blurred at full size.
+ *
+ * A 100+px blur across the whole viewport is a large composited layer to re-filter, and
+ * this runs on a phone. Filters apply before transforms, so blurring a 20vmax box and
+ * scaling it 7.5× costs a fraction of that and lands at the same apparent radius. It also
+ * solves the edges: a blur samples nothing outside its own element, so an image at
+ * viewport size fades to transparent at the border and the corners go flat. Scaled well
+ * past the frame, there is colour all the way out.
+ */
+.layer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20vmax;
+  height: 20vmax;
+  margin: -10vmax 0 0 -10vmax;
+  object-fit: cover;
+  /* Saturation back up, because a heavy blur averages colour towards grey. */
+  filter: blur(15px) saturate(1.9) brightness(0.62);
+  transform: scale(7.5);
+  opacity: 0;
+  /* Slow: a track change should read as the light in the room shifting. */
+  transition: opacity 1200ms ease;
+}
+
+.visible {
+  opacity: 1;
+}
+
+/*
+ * Two passes over the top. The flat scrim holds the whole thing down near the canvas
+ * colour so a white card always has something to sit on, whatever the cover; the vignette
+ * keeps the corners from competing with the card.
+ */
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--canvas);
+  opacity: 0.42;
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 90% at 50% 40%, transparent 35%, rgb(0 0 0 / 55%) 100%);
+}
+
+/* Still a slow cross-fade of colour, which is not motion — but not an abrupt cut either. */
+@media (prefers-reduced-motion: reduce) {
+  .layer {
+    transition: opacity 400ms ease;
+  }
+}

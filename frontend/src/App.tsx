@@ -4,6 +4,7 @@ import { InputsCard } from './components/pages/InputsCard';
 import { SettingsCard } from './components/pages/SettingsCard';
 import { TvCard } from './components/pages/TvCard';
 import { VolumeCard } from './components/pages/VolumeCard';
+import { Backdrop } from './components/shared/Backdrop';
 import { DeviceSwitcher } from './components/shared/DeviceSwitcher';
 import { MiniPlayer } from './components/shared/MiniPlayer';
 import {
@@ -119,9 +120,14 @@ export default function App() {
     setSection(SECTIONS[next].includes(section) ? section : SECTIONS[next][0]);
   };
 
+  // With artwork behind them, the white surfaces can no longer assume a dark ground.
+  const tinted = playing?.image != null;
+
   return (
     <main className={styles.screen}>
-      <div className={styles.shell}>
+      <Backdrop image={playing?.image ?? null} />
+
+      <div className={`${styles.shell} ${tinted ? 'tinted' : ''}`}>
         {/* Switcher and toolbar sit close together as one block of chrome. */}
         <div className={styles.chrome}>
           <DeviceSwitcher device={device} onSelect={selectDevice} />

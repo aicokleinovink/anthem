@@ -7,7 +7,7 @@
   border-radius: 44px;
   background: var(--card);
   color: var(--ink);
-  box-shadow: 0 32px 80px rgb(0 0 0 / 45%);
+  box-shadow: var(--shadow-card);
   /* Rings expand past the dial; the card's rounded edge is where they get cut off. */
   overflow: hidden;
   /* Own stacking context, so the ripple layer can sit behind the content below. */

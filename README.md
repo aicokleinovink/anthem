@@ -50,6 +50,7 @@ which also means power-on over IP will not work.
 | **Power** | On/off from the toolbar, with a standby state the cards respect |
 | **TV** | Switch the LG television between HDMI 1, PlayStation, YouTube and Netflix |
 | **Now playing** | A mini player under every card: artwork, track, position, and skip controls |
+| **Artwork backdrop** | The viewport takes its colour from the blurred album art of whatever is playing |
 
 Every reading comes from the receiver and every write is confirmed by it — nothing in the
 UI is an echo of what was requested.
