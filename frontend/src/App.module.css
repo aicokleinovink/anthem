@@ -13,6 +13,13 @@
   width: min(360px, 100%);
 }
 
+/* The device switcher reads as a heading over the section tabs, so it sits nearer to
+   them than the toolbar does to the card. */
+.chrome {
+  display: grid;
+  gap: 6px;
+}
+
 /* Wrapper for the active card, so the tabs have a panel to point at. */
 .stage {
   display: grid;

@@ -4,8 +4,16 @@ import { InputsCard } from './components/pages/InputsCard';
 import { SettingsCard } from './components/pages/SettingsCard';
 import { TvCard } from './components/pages/TvCard';
 import { VolumeCard } from './components/pages/VolumeCard';
+import { DeviceSwitcher } from './components/shared/DeviceSwitcher';
 import { MiniPlayer } from './components/shared/MiniPlayer';
-import { SECTIONS, SECTION_PANEL_ID, Toolbar, type Section } from './components/shared/Toolbar';
+import {
+  DEVICES,
+  SECTIONS,
+  SECTION_PANEL_ID,
+  Toolbar,
+  type Device,
+  type Section,
+} from './components/shared/Toolbar';
 import { useReceiver } from './hooks/useReceiver';
 import { useSustained } from './hooks/useSustained';
 import { useVolume } from './hooks/useVolume';
@@ -21,6 +29,7 @@ const UNNAMED = /^Profile\d+$/;
 const PLAYER_HOLD_MS = 4000;
 
 export default function App() {
+  const [device, setDevice] = useState<Device>('anthem');
   const [section, setSection] = useState<Section>('volume');
   const [direction, setDirection] = useState<'right' | 'left'>('right');
 
@@ -93,22 +102,40 @@ export default function App() {
 
   // Cards enter from whichever side you moved towards in the toolbar, so the swap
   // reads as travelling with the sliding pill rather than as an unrelated fade.
+  const sections = SECTIONS[device];
+
   const select = (next: Section) => {
-    setDirection(SECTIONS.indexOf(next) > SECTIONS.indexOf(section) ? 'right' : 'left');
+    setDirection(sections.indexOf(next) > sections.indexOf(section) ? 'right' : 'left');
     setSection(next);
+  };
+
+  const selectDevice = (next: Device) => {
+    if (next === device) return;
+    setDirection(DEVICES.indexOf(next) > DEVICES.indexOf(device) ? 'right' : 'left');
+    setDevice(next);
+    // Inputs exists under both devices and means the same thing there — that device's
+    // sources — so it carries across; anything else falls back to the device's first
+    // section.
+    setSection(SECTIONS[next].includes(section) ? section : SECTIONS[next][0]);
   };
 
   return (
     <main className={styles.screen}>
       <div className={styles.shell}>
-        <Toolbar
-          section={section}
-          onSelect={select}
-          power={power}
-          powerBusy={busy}
-          offline={offline}
-          onTogglePower={togglePower}
-        />
+        {/* Switcher and toolbar sit close together as one block of chrome. */}
+        <div className={styles.chrome}>
+          <DeviceSwitcher device={device} onSelect={selectDevice} />
+
+          <Toolbar
+            device={device}
+            section={section}
+            onSelect={select}
+            power={power}
+            powerBusy={busy}
+            offline={offline}
+            onTogglePower={togglePower}
+          />
+        </div>
 
         {/*
           The card is the panel the tabs control, so screen readers announce the switch
@@ -124,14 +151,16 @@ export default function App() {
           role="tabpanel"
           aria-labelledby={`tab-${section}`}
         >
-          {section === 'volume' && (
+          {device === 'tv' && section === 'inputs' && (
+            <TvCard key="tv-inputs" controller={tv} offline={offline} />
+          )}
+          {device === 'anthem' && section === 'volume' && (
             <VolumeCard key="volume" controller={volume} powerOn={power} offline={offline} />
           )}
-          {section === 'inputs' && (
+          {device === 'anthem' && section === 'inputs' && (
             <InputsCard key="inputs" controller={inputs} powerOn={power} offline={offline} />
           )}
-          {section === 'tv' && <TvCard key="tv" controller={tv} offline={offline} />}
-          {section === 'settings' && (
+          {device === 'anthem' && section === 'settings' && (
             <SettingsCard
               key="settings"
               profiles={profiles}
