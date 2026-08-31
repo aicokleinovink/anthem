@@ -68,6 +68,11 @@ The same trick works for anything else the unit's UI can do but the docs do not 
 - Styles are CSS Modules beside their component. `styles/global.css` holds only tokens, the
   reset, and the two card-entrance keyframes.
 - Comments explain *why*, especially where the hardware forced a choice.
+- **Filing an issue? The label conventions live in `.claude/skills/work-an-issue/SKILL.md`.**
+  Read them even when you are only creating a ticket and not working one. In particular,
+  `needs hardware` goes on any issue whose work cannot be finished without the real
+  receiver, streamer or TV — "we would have to probe the unit to know" is the test — and it
+  is what keeps unattended runs from picking up work they cannot do.
 
 ## Running and checking
 
