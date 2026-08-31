@@ -1,20 +1,11 @@
 import { Card } from '../shared/Card';
 import { Panel } from '../shared/Panel';
 import { PillList } from '../shared/PillList';
-interface SpeakerProfilesController {
-  profiles: Array<{ profile: number; value: number; name: string }>;
-  selected: number | null;
-  inputName: string | null;
-  select: (value: number) => void;
-}
-
-interface DisplayController {
-  options: Array<{ value: number; label: string }>;
-  info: number | null;
-  select: (info: number) => void;
-}
+import type { DisplayController } from '../../hooks/useDisplay';
+import type { SpeakerProfilesController } from '../../hooks/useProfiles';
 
 interface SettingsCardProps {
+  /** Both owned by the app, not by this card — see InputsCard. */
   profiles: SpeakerProfilesController;
   display: DisplayController;
   powerOn: boolean | null;

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { selectInput, selectTvTarget, setDisplay, setPower, setSpeakerProfile } from './api';
+import { setPower } from './api';
 import { InputsCard } from './components/pages/InputsCard';
 import { SettingsCard } from './components/pages/SettingsCard';
 import { TvCard } from './components/pages/TvCard';
@@ -15,17 +15,15 @@ import {
   type Device,
   type Section,
 } from './components/shared/Toolbar';
+import { useDisplay } from './hooks/useDisplay';
+import { useInputs } from './hooks/useInputs';
 import { usePlayerMorph } from './hooks/usePlayerMorph';
+import { useProfiles } from './hooks/useProfiles';
 import { useReceiver } from './hooks/useReceiver';
 import { useSustained } from './hooks/useSustained';
+import { useTvTargets } from './hooks/useTvTargets';
 import { useVolume } from './hooks/useVolume';
 import styles from './App.module.css';
-
-/**
- * Factory slot names. The receiver always reports four profiles; the ones nobody has
- * named still come back as "Profile3", "Profile4" and are noise in a picker.
- */
-const UNNAMED = /^Profile\d+$/;
 
 /** How long the player stays put while the streamer moves between tracks. */
 const PLAYER_HOLD_MS = 4000;
@@ -44,6 +42,10 @@ export default function App() {
   // One stream feeds every card, and keeps running while another card is on screen.
   const receiver = useReceiver();
   const volume = useVolume(receiver);
+  const inputs = useInputs(receiver);
+  const profiles = useProfiles(receiver);
+  const tv = useTvTargets(receiver);
+  const display = useDisplay(receiver);
   const { snapshot, offline, busy, write } = receiver;
 
   const power = snapshot?.power ?? null;
@@ -69,56 +71,6 @@ export default function App() {
     if (!snapshot || power === null) return;
     const target = !power;
     write({ ...snapshot, power: target }, () => setPower(target));
-  };
-
-  const inputs = {
-    inputs: snapshot?.inputs.list ?? [],
-    selected: snapshot?.inputs.selected ?? null,
-    format: snapshot?.inputs.format ?? null,
-    select: (input: number) => {
-      if (!snapshot || input === snapshot.inputs.selected) return;
-      write(
-        // The format belongs to the old source; drop it until the receiver reports
-        // what is arriving on the new one.
-        { ...snapshot, inputs: { ...snapshot.inputs, selected: input, format: null } },
-        () => selectInput(input),
-      );
-    },
-  };
-
-  const all = snapshot?.speakerProfile.profiles ?? [];
-  const named = all.filter((profile) => !UNNAMED.test(profile.name));
-  const profiles = {
-    // Show the named profiles; fall back to all of them if none have been renamed.
-    profiles: named.length > 0 ? named : all,
-    selected: snapshot?.speakerProfile.selected ?? null,
-    inputName: snapshot?.speakerProfile.inputName ?? null,
-    select: (value: number) => {
-      if (!snapshot || value === snapshot.speakerProfile.selected) return;
-      write(
-        { ...snapshot, speakerProfile: { ...snapshot.speakerProfile, selected: value } },
-        () => setSpeakerProfile(value),
-      );
-    },
-  };
-
-  const tv = {
-    available: snapshot?.tv.available ?? false,
-    current: snapshot?.tv.current ?? null,
-    targets: snapshot?.tv.targets ?? [],
-    select: (target: string) => {
-      if (!snapshot || target === snapshot.tv.current) return;
-      write({ ...snapshot, tv: { ...snapshot.tv, current: target } }, () => selectTvTarget(target));
-    },
-  };
-
-  const display = {
-    options: snapshot?.display.options ?? [],
-    info: snapshot?.display.info ?? null,
-    select: (info: number) => {
-      if (!snapshot || info === snapshot.display.info) return;
-      write({ ...snapshot, display: { ...snapshot.display, info } }, () => setDisplay(info));
-    },
   };
 
   // Cards enter from whichever side you moved towards in the toolbar, so the swap
