@@ -34,6 +34,11 @@ export default function App() {
   const [direction, setDirection] = useState<'right' | 'left'>('right');
   /** The player only ever opens because someone asked it to — never on a track change. */
   const [expanded, setExpanded] = useState(false);
+  /**
+   * Only a power write, not the stream's `busy`, which is set by any write at all — the
+   * button dimmed and came back every time somebody switched profile or input.
+   */
+  const [powerBusy, setPowerBusy] = useState(false);
 
   const shellRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -46,7 +51,7 @@ export default function App() {
   const profiles = useProfiles(receiver);
   const tv = useTvTargets(receiver);
   const display = useDisplay(receiver);
-  const { snapshot, offline, busy, write } = receiver;
+  const { snapshot, offline, write } = receiver;
 
   const power = snapshot?.power ?? null;
 
@@ -70,7 +75,12 @@ export default function App() {
   const togglePower = () => {
     if (!snapshot || power === null) return;
     const target = !power;
-    write({ ...snapshot, power: target }, () => setPower(target));
+    // Flagged inside the send, which `write` calls only if it took the write, so this
+    // cannot be left set by a press that was dropped for one already in flight.
+    write({ ...snapshot, power: target }, () => {
+      setPowerBusy(true);
+      return setPower(target).finally(() => setPowerBusy(false));
+    });
   };
 
   // Cards enter from whichever side you moved towards in the toolbar, so the swap
@@ -113,7 +123,7 @@ export default function App() {
             section={section}
             onSelect={select}
             power={power}
-            powerBusy={busy}
+            powerBusy={powerBusy}
             offline={offline}
             onTogglePower={togglePower}
           />
