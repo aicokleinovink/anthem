@@ -8,6 +8,12 @@
 # under `&` survives the interrupt that appeared to stop it. `set -m` gives each
 # background job its own process group, and the trap kills those groups by hand.
 #
+# `set -m` is switched back off once both are up, and that is not tidiness: with job
+# control on, the `sleep` in the monitor loop is *also* given its own process group and
+# the terminal with it, so Ctrl+C reaches only the sleep. The script never sees it and
+# loops for ever. Verified in a pty by sending a real ^C, which is the only way to see
+# this — a `kill -INT` aimed at the script by hand works either way.
+#
 # macOS ships bash 3.2, so nothing here may use `wait -n` or newer syntax.
 
 set -uo pipefail
@@ -56,7 +62,11 @@ cleanup() {
     kill -- "-$pid" 2>/dev/null || true
   done
 }
-trap cleanup INT TERM EXIT
+# Interrupting is a clean exit, not a failure: without leaving here, the handler returns
+# into the monitor loop, which finds a dead server and reports it as one.
+trap 'cleanup; exit 130' INT
+trap 'cleanup; exit 143' TERM
+trap cleanup EXIT
 
 echo "Clearing ports…"
 free_port "$API_PORT"
@@ -68,6 +78,11 @@ api_pid=$!
 # --host so the LAN address is printed too: testing a remote on a phone is the point.
 (cd frontend && npm run dev -- --host) &
 ui_pid=$!
+
+# Both are up and each is its own process group, which is all `set -m` was for. Job
+# control off again puts this script back in the terminal's foreground group, so Ctrl+C
+# below reaches the trap instead of being swallowed by the sleep in the loop.
+set +m
 
 cat <<BANNER
 
