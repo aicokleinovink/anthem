@@ -28,15 +28,15 @@ test.describe('device groups', () => {
     expect(commanded).toEqual([]);
   });
 
-  test('the Anthem group keeps its three sections and dispatches to the receiver', async ({
+  test('the Anthem group keeps its four sections and dispatches to the receiver', async ({
     page,
     control,
   }) => {
     await open(page);
     await page.getByRole('button', { name: 'Anthem' }).click();
 
-    await expect(page.getByRole('tab')).toHaveCount(3);
-    for (const name of ['Volume', 'Inputs', 'Settings']) {
+    await expect(page.getByRole('tab')).toHaveCount(4);
+    for (const name of ['Volume', 'Sound', 'Inputs', 'Settings']) {
       await expect(page.getByRole('tab', { name })).toBeVisible();
     }
 

@@ -36,6 +36,8 @@ export interface FakeReceiverState {
   inputProfiles: Record<number, number>;
   /** Front panel displayed info: 0 All, 1 Volume Only. */
   frontPanelInfo: number;
+  /** Bass, treble and subwoofer trim per zone, in dB. */
+  tone: Record<number, { TON0: number; TON1: number; LEV1: number }>;
 }
 
 function initialState(): FakeReceiverState {
@@ -53,6 +55,7 @@ function initialState(): FakeReceiverState {
     profileNames: { 1: 'Center', 2: 'Corner', 3: 'Profile3', 4: 'Profile4' },
     inputProfiles: { 1: 0, 2: 0, 3: 1, 4: 0 },
     frontPanelInfo: 0,
+    tone: { 1: { TON0: 0, TON1: 0, LEV1: 0 }, 2: { TON0: 0, TON1: 0, LEV1: 0 } },
   };
 }
 
@@ -64,6 +67,20 @@ const VOLUME_MIN_DB = -90;
 const VOLUME_MAX_DB = 10;
 
 const clampDb = (db: number) => Math.min(Math.max(db, VOLUME_MIN_DB), VOLUME_MAX_DB);
+
+/**
+ * The tone controls take -10.0 .. +10.0 on a 0.5 dB grid. Reproduced here because the
+ * real unit does NOT clamp an illegal value — it rejects the command outright and leaves
+ * the level alone, which is what `device/tone.ts` exists to prevent.
+ */
+const TONE_MIN_DB = -10;
+const TONE_MAX_DB = 10;
+
+const legalTone = (value: number) =>
+  Number.isFinite(value) &&
+  value >= TONE_MIN_DB &&
+  value <= TONE_MAX_DB &&
+  Math.abs(value * 2 - Math.round(value * 2)) < 1e-9;
 
 /** How the receiver writes a level: one decimal, e.g. `-77.0`. */
 const db = (value: number) => value.toFixed(1);
@@ -139,6 +156,24 @@ export async function startFakeReceiver(host = '127.0.0.1'): Promise<FakeReceive
       return reply([`SSSP${profile}0${state.profileNames[profile] ?? `Profile${profile}`}`]);
     }
 
+    // --- tone and subwoofer trim ------------------------------------------
+    const tone = /^Z([12])(TON0|TON1|LEV1)(.*)$/.exec(body);
+    if (tone) {
+      const zone = Number(tone[1]);
+      const key = tone[2] as 'TON0' | 'TON1' | 'LEV1';
+      const value = tone[3] ?? '';
+      const levels = state.tone[zone]!;
+
+      if (value === '?') return reply([`Z${zone}${key}${db(levels[key])}`]);
+
+      const requested = Number(value);
+      // Off the grid or out of range: rejected with '!E', and nothing moves.
+      if (value === '' || !legalTone(requested)) return reply([`!E${body}`]);
+
+      levels[key] = requested;
+      return reply([`Z${zone}${key}${db(requested)}`], true);
+    }
+
     // --- zone -------------------------------------------------------------
     const zoned = /^Z([12])(PVOL|POW|VOL|VUP|VDN|MUT|INP|AIN)(.*)$/.exec(body);
     if (zoned) {
@@ -200,7 +235,8 @@ export async function startFakeReceiver(host = '127.0.0.1'): Promise<FakeReceive
       }
     }
 
-    // The receiver prefixes anything it will not accept with '!I'.
+    // The receiver prefixes a command it does not understand with '!I'. One it
+    // understands but will not accept comes back '!E' — see the tone handling above.
     reply([`!I${body}`]);
   };
 

@@ -286,14 +286,25 @@ export class Receiver extends EventEmitter {
 
   // --- tone ---------------------------------------------------------------
 
-  /** Read all three trims for a zone. Four paced writes, so it is refresh-time work. */
+  /**
+   * Read all three trims for a zone. Three paced writes, so it is refresh-time work.
+   *
+   * A control the receiver will not answer is skipped rather than allowed to throw:
+   * these commands are undocumented, so a model or firmware that does not have one
+   * must not take the rest of the refresh down with it. The level simply stays unknown
+   * and the card shows no reading for it.
+   */
   async getTone(zone: Zone): Promise<Partial<Record<ToneControl, number>>> {
     for (const control of TONE_CONTROLS) {
-      const message = await this.connection.send(
-        commands.toneQuery(zone, control),
-        zoneReply(zone, TONE_KEYS[control]),
-      );
-      applyMessage(this.state, message);
+      try {
+        const message = await this.connection.send(
+          commands.toneQuery(zone, control),
+          zoneReply(zone, TONE_KEYS[control]),
+        );
+        applyMessage(this.state, message);
+      } catch (error) {
+        console.error(`[anthem] no ${control} trim: ${(error as Error).message}`);
+      }
     }
     return this.state.zones[zone].tone;
   }
