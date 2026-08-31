@@ -1,0 +1,11 @@
+<!-- The flag mark from the project logo: a banner with a wave through it, the top edge
+     rising left to right and the bottom edge falling, so it reads as cloth in motion.
+     This is the source the PNG icons are rasterised from — see frontend/scripts/render-icons.py.
+     The glyph sits in the middle 62%; iOS masks its own corners, so none are drawn here. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <rect width="100" height="100" fill="#1c1c22"/>
+  <path fill="#f5f2ec" transform="translate(19 19) scale(0.62)"
+        d="M0,15.1 C8,4 16,0 26,0 C40,0 52,15.7 72,15.7 C84,15.7 92,8 100,0
+           L100,83.8 C92,91.8 84,99.5 72,99.5 C52,99.5 40,83.8 26,83.8
+           C16,83.8 8,87.8 0,98.9 Z"/>
+</svg>

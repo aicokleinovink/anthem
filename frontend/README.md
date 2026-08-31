@@ -33,7 +33,21 @@ one of them alone; the API must be up either way.
 
 On your phone: the root command passes `--host`, so Vite prints a LAN address as well —
 open `http://<your-mac>:5173` there and Add to Home Screen, and it opens full-screen
-without Safari chrome.
+without Safari chrome, with the flag icon on its own tile.
+
+The icons live in `public/`, which Vite copies to the root of `dist/`. `icon.svg` is the
+source of the shape; the PNGs are rasterised from the same path by
+`scripts/render-icons.py` (stdlib only — the repo has no image dependency), so adjust the
+curve there and re-run it rather than editing a PNG:
+
+```bash
+python3 scripts/render-icons.py public
+```
+
+Two things iOS forces: the touch icon has to be a **PNG** (it ignores SVG), and it has to
+be **opaque** — transparency is composited onto black, which is the tile the icon exists to
+replace. Corners are not drawn either, because iOS applies its own squircle mask and a
+rounded source ends up double-rounded.
 
 ## Devices and sections
 
@@ -430,6 +444,8 @@ src/hooks/usePlayerMorph.ts    the player's geometry between the strip and the c
 src/components/shared/         Card, Panel, Toolbar, DeviceSwitcher, PowerButton, PillList, …
 src/components/pages/          one card per device section
 src/styles/global.css          tokens, reset, shared keyframes
+public/                        icons and the web manifest, copied to the root of dist/
+scripts/render-icons.py        rasterises the PNG icons from public/icon.svg
 ```
 
 No web font is loaded: the system stack renders as SF Pro on iOS, which is what the
