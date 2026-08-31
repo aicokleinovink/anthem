@@ -18,14 +18,62 @@ const STALE_MS = 25_000;
 const RETRY_MIN_MS = 1_000;
 const RETRY_MAX_MS = 15_000;
 
+/**
+ * How long a guess may outlive its write with no snapshot confirming it. Only reached
+ * when the receiver quietly did something other than what was asked — it clamped the
+ * value, or dropped the command — so this is what puts the truth back on screen.
+ */
+const CONFIRM_MS = 2_000;
+
+/**
+ * The fields a guess changed, as `section.field` paths.
+ *
+ * Only these decide whether a snapshot confirms the guess. Comparing whole sections
+ * would not do: the receiver reports things around the change that move on their own —
+ * switching input also changes the audio format, a moment later.
+ */
+function changedFields(guess: Snapshot, current: Snapshot | null): string[] {
+  const paths: string[] = [];
+
+  for (const [section, value] of Object.entries(guess)) {
+    const before = (current as Record<string, unknown> | null)?.[section];
+    if (JSON.stringify(value) === JSON.stringify(before)) continue;
+
+    // Every write is `{ ...snapshot, section: { ...section, field: value } }`, so one
+    // level down is as deep as a guess ever reaches.
+    if (value && typeof value === 'object' && before && typeof before === 'object') {
+      for (const field of Object.keys(value)) {
+        const guessed = (value as Record<string, unknown>)[field];
+        const known = (before as Record<string, unknown>)[field];
+        if (JSON.stringify(guessed) !== JSON.stringify(known)) paths.push(`${section}.${field}`);
+      }
+    } else {
+      paths.push(section);
+    }
+  }
+
+  return paths;
+}
+
+/** Whether `next` agrees with the guess on every field the guess changed. */
+function confirms(next: Snapshot, guess: Snapshot, paths: string[]): boolean {
+  const at = (source: Snapshot, path: string) =>
+    path
+      .split('.')
+      .reduce<unknown>((value, key) => (value as Record<string, unknown> | undefined)?.[key], source);
+
+  return paths.every((path) => JSON.stringify(at(next, path)) === JSON.stringify(at(guess, path)));
+}
+
 export interface ReceiverController {
   /** null until the first snapshot arrives. */
   snapshot: Snapshot | null;
   offline: boolean;
   busy: boolean;
   /**
-   * Show `optimistic` at once and send the write. The receiver pushes the result to
-   * everyone, so the next snapshot replaces it; a failed write puts it back.
+   * Show `optimistic` at once and send the write. The guess stands until a snapshot
+   * confirms it — not until the next snapshot of any kind, which is usually one the
+   * receiver pushed before it had heard about the write. A failed write puts it back.
    *
    * One at a time: a second call while one is in flight is ignored. Volume is the
    * exception and manages its own queue — see useVolume.
@@ -48,6 +96,9 @@ export function useReceiver(): ReceiverController {
   const [offline, setOffline] = useState(false);
   const [busy, setBusy] = useState(false);
   const inFlight = useRef(false);
+  /** The fields the current guess is waiting to have confirmed. */
+  const pending = useRef<string[]>([]);
+  const giveUp = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     let source: EventSource | null = null;
@@ -68,9 +119,14 @@ export function useReceiver(): ReceiverController {
 
       source.onmessage = (event) => {
         heard();
-        setSnapshot(JSON.parse(event.data) as Snapshot);
-        // Whatever the receiver just told us outranks anything we were guessing.
-        setOptimistic(null);
+        const next = JSON.parse(event.data) as Snapshot;
+        setSnapshot(next);
+        // Drop the guess only once the receiver agrees with it. A write draws snapshots
+        // that still carry the old value — the API asks the receiver which input it is
+        // on before writing, and every reply on the wire pushes state to every client —
+        // so clearing on the first snapshot to arrive shows the old value again for the
+        // ~200ms until the real one lands, which is what read as a flicker.
+        setOptimistic((guess) => (guess && confirms(next, guess, pending.current) ? null : guess));
       };
 
       // Keeps the watchdog fed while nothing is changing.
@@ -101,25 +157,35 @@ export function useReceiver(): ReceiverController {
     };
   }, []);
 
-  const write = useCallback((next: Snapshot, send: () => Promise<unknown>) => {
-    if (inFlight.current) return;
+  useEffect(() => () => clearTimeout(giveUp.current), []);
 
-    inFlight.current = true;
-    setBusy(true);
-    setOptimistic(next);
+  const write = useCallback(
+    (next: Snapshot, send: () => Promise<unknown>) => {
+      if (inFlight.current) return;
 
-    void send()
-      .then(() => setOffline(false))
-      .catch(() => {
-        // Nothing reached the receiver, so drop the guess and show the truth again.
-        setOptimistic(null);
-        setOffline(true);
-      })
-      .finally(() => {
-        inFlight.current = false;
-        setBusy(false);
-      });
-  }, []);
+      inFlight.current = true;
+      pending.current = changedFields(next, optimistic ?? snapshot);
+      setBusy(true);
+      setOptimistic(next);
+
+      clearTimeout(giveUp.current);
+      giveUp.current = setTimeout(() => setOptimistic(null), CONFIRM_MS);
+
+      void send()
+        .then(() => setOffline(false))
+        .catch(() => {
+          // Nothing reached the receiver, so drop the guess and show the truth again.
+          clearTimeout(giveUp.current);
+          setOptimistic(null);
+          setOffline(true);
+        })
+        .finally(() => {
+          inFlight.current = false;
+          setBusy(false);
+        });
+    },
+    [optimistic, snapshot],
+  );
 
   const reportWrite = useCallback((ok: boolean) => setOffline(!ok), []);
 
