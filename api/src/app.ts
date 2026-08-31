@@ -11,6 +11,7 @@ import { inputRoutes } from './routes/inputs.js';
 import { playerRoutes } from './routes/player.js';
 import { powerRoutes } from './routes/power.js';
 import { profileRoutes } from './routes/profiles.js';
+import { soundRoutes } from './routes/sound.js';
 import { tvRoutes } from './routes/tv.js';
 import { systemRoutes } from './routes/system.js';
 import { volumeRoutes } from './routes/volume.js';
@@ -62,6 +63,7 @@ export function createApp(receiver: Receiver, player: Player, tv: WebosTv): expr
     app.use(mount, volumeRoutes(receiver));
     app.use(mount, inputRoutes(receiver));
     app.use(mount, profileRoutes(receiver));
+    app.use(mount, soundRoutes(receiver));
     app.use(mount, displayRoutes(receiver));
   }
 

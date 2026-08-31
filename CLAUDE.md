@@ -29,6 +29,9 @@ The receiver:
 - **It silently drops commands sent back-to-back** — no error, just missing work. The
   transport paces writes with a minimum gap; do not remove that.
 - Speaker profile values are **0-based** while profile numbers are 1-based.
+- **Tone/level commands reject rather than clamp.** `Z1TON0`, `Z1TON1` and `Z1LEV1` take
+  -10.0..+10.0 in 0.5 steps; anything else comes back `!E...` and nothing moves. Round and
+  clamp before sending.
 - It **pushes every change to every client**, which is why nothing polls it.
 
 The frontend:

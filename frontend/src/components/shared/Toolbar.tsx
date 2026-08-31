@@ -6,7 +6,7 @@ export const DEVICES = ['tv', 'anthem'] as const;
 
 export type Device = (typeof DEVICES)[number];
 
-const ALL_SECTIONS = ['volume', 'inputs', 'settings'] as const;
+const ALL_SECTIONS = ['volume', 'sound', 'inputs', 'settings'] as const;
 
 export type Section = (typeof ALL_SECTIONS)[number];
 
@@ -16,7 +16,7 @@ export type Section = (typeof ALL_SECTIONS)[number];
  */
 export const SECTIONS: Record<Device, readonly [Section, ...Section[]]> = {
   tv: ['inputs'],
-  anthem: ['volume', 'inputs', 'settings'],
+  anthem: ['volume', 'sound', 'inputs', 'settings'],
 };
 
 /** The card below the toolbar is the panel these tabs control. */
@@ -29,6 +29,7 @@ export const DEVICE_LABELS: Record<Device, string> = {
 
 const LABELS: Record<Section, string> = {
   volume: 'Volume',
+  sound: 'Sound',
   inputs: 'Inputs',
   settings: 'Settings',
 };

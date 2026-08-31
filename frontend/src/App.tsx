@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { setPower } from './api';
 import { InputsCard } from './components/pages/InputsCard';
 import { SettingsCard } from './components/pages/SettingsCard';
+import { SoundCard } from './components/pages/SoundCard';
 import { TvCard } from './components/pages/TvCard';
 import { VolumeCard } from './components/pages/VolumeCard';
 import { Backdrop } from './components/shared/Backdrop';
@@ -20,6 +21,7 @@ import { useInputs } from './hooks/useInputs';
 import { usePlayerMorph } from './hooks/usePlayerMorph';
 import { useProfiles } from './hooks/useProfiles';
 import { useReceiver } from './hooks/useReceiver';
+import { useSound } from './hooks/useSound';
 import { useSustained } from './hooks/useSustained';
 import { useTvTargets } from './hooks/useTvTargets';
 import { useVolume } from './hooks/useVolume';
@@ -51,6 +53,7 @@ export default function App() {
   const profiles = useProfiles(receiver);
   const tv = useTvTargets(receiver);
   const display = useDisplay(receiver);
+  const sound = useSound(receiver);
   const { snapshot, offline, write } = receiver;
 
   const power = snapshot?.power ?? null;
@@ -152,6 +155,9 @@ export default function App() {
           )}
           {device === 'anthem' && section === 'volume' && (
             <VolumeCard key="volume" controller={volume} powerOn={power} offline={offline} />
+          )}
+          {device === 'anthem' && section === 'sound' && (
+            <SoundCard key="sound" controller={sound} powerOn={power} offline={offline} />
           )}
           {device === 'anthem' && section === 'inputs' && (
             <InputsCard key="inputs" controller={inputs} powerOn={power} offline={offline} />

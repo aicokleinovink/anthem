@@ -2,7 +2,9 @@
   display: grid;
   place-items: center;
   min-height: 100%;
-  padding: 24px;
+  /* Narrower at the sides than top and bottom: four tabs need the width, and on a phone
+     the side margins were the cheapest place to find it. */
+  padding: 24px 16px;
   padding-bottom: max(24px, env(safe-area-inset-bottom));
 }
 
@@ -11,7 +13,9 @@
   position: relative;
   display: grid;
   gap: 14px;
-  width: min(360px, 100%);
+  /* Wide enough for four tabs and the power button with room to spare on a 375pt
+     phone, which is the narrowest iPhone this has to fit. */
+  width: min(390px, 100%);
 }
 
 /*

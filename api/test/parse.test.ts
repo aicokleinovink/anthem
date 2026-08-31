@@ -15,6 +15,14 @@ test('parses zone frames, preferring PVOL over POW', () => {
   assert.deepEqual(parseMessage('Z2VOL-81.0'), { kind: 'zone', zone: 2, key: 'VOL', value: '-81.0' });
 });
 
+test('parses tone frames, including a value that starts with the key digit', () => {
+  // Z1TON0 + "0.5": the key ends in a digit and so does the payload, which is exactly
+  // the case the longest-first key ordering exists to get right.
+  assert.deepEqual(parseMessage('Z1TON00.5'), { kind: 'zone', zone: 1, key: 'TON0', value: '0.5' });
+  assert.deepEqual(parseMessage('Z1TON1-3.0'), { kind: 'zone', zone: 1, key: 'TON1', value: '-3.0' });
+  assert.deepEqual(parseMessage('Z1LEV12.0'), { kind: 'zone', zone: 1, key: 'LEV1', value: '2.0' });
+});
+
 test('parses global frames and input names', () => {
   assert.deepEqual(parseMessage('IDMMRX 540'), { kind: 'global', key: 'IDM', value: 'MRX 540' });
   assert.deepEqual(parseMessage('IS1INHDMI 1'), { kind: 'inputName', input: 1, value: 'HDMI 1' });
@@ -62,4 +70,11 @@ test('builds the verified command strings', () => {
   assert.equal(commands.profileNameQuery(2), 'SSSP20?;');
   assert.equal(commands.frontPanelInfoQuery(), 'GCFPDI?;');
   assert.equal(commands.frontPanelInfo(0), 'GCFPDI0;');
+  // Always one decimal, which is the form the receiver itself uses.
+  assert.equal(commands.tone(1, 'bass', 4.5), 'Z1TON04.5;');
+  assert.equal(commands.tone(1, 'treble', -3), 'Z1TON1-3.0;');
+  assert.equal(commands.tone(1, 'subwoofer', 2), 'Z1LEV12.0;');
+  // Never "-0.0": the unit has only ever been asked for "0.0".
+  assert.equal(commands.tone(1, 'bass', -0), 'Z1TON00.0;');
+  assert.equal(commands.toneQuery(1, 'subwoofer'), 'Z1LEV1?;');
 });

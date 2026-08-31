@@ -15,6 +15,7 @@ test('folds zone frames into the cache', () => {
     muted: false,
     input: 3,
     audioFormat: 'Dolby D+',
+    tone: {},
   });
 });
 
@@ -32,6 +33,11 @@ test('folds identity, input names and speaker profiles', () => {
   assert.equal(state.profileNames[2], 'Corner');
   // 0-based on the wire: input 3 is on profile 2.
   assert.equal(state.inputProfiles[3], 1);
+});
+
+test('folds tone and subwoofer trim, keeping the three apart', () => {
+  const state = fold('Z1TON04.5', 'Z1TON1-3.0', 'Z1LEV12.0');
+  assert.deepEqual(state.zones[1].tone, { bass: 4.5, treble: -3, subwoofer: 2 });
 });
 
 test('folds the front panel display setting', () => {
