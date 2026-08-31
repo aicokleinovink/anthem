@@ -63,9 +63,13 @@
   --fill-2: rgb(120 120 128 / 18%);
   /* A selection thumb is brighter glass, never a solid: it still shows the art through. */
   --thumb: rgb(255 255 255 / 18%);
-  /* Every section card is this tall, so switching tabs never resizes the surface.
-     It is the natural height of the volume card, which is the tallest. */
-  --card-height: 442px;
+  /* Every section card is at least this tall, so switching tabs never resizes the surface.
+     It is deliberately *above* the natural height of the tallest card (volume, 442px at
+     390px wide) rather than equal to it: at equal, volume sits on the boundary with zero
+     headroom, so any content that renders a fraction taller — other font metrics, a longer
+     status string, a caption that wraps — grows that one card alone and shifts the toolbar,
+     since the shell is centred. Keep the slack when re-measuring. */
+  --card-height: 480px;
 
   /* iOS's sheet curve: leaves fast, settles slowly, no overshoot. */
   --spring: cubic-bezier(0.32, 0.72, 0, 1);
