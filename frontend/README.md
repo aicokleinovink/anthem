@@ -83,6 +83,13 @@ failed write puts the previous value back.
 hook inside `VolumeCard` would be unmounted on every tab change and the card would flash
 "connecting" each time you came back to it.
 
+Each section has **one controller hook** beside `useReceiver` — `useVolume`, `useInputs`,
+`useProfiles`, `useTvTargets`, `useDisplay`. They all take the `ReceiverController` and
+return the state plus the writes for their section, and `App.tsx` calls them once each and
+passes the result to the card. That is where a section's own quirks live: dropping the
+signal format when the input changes, hiding the unnamed profile slots, volume's
+coalescing. The cards themselves hold no device state at all.
+
 The power button reads the receiver's real state (polled every 4 s, slower than volume
 since power rarely changes) and writes `PUT /api/power`. It is optimistic — the button lights
 the moment you press — and corrects itself from whatever the receiver confirms.
@@ -392,6 +399,10 @@ place, so every card would slide its pill in on load.
 src/api.ts                     typed client for the API
 src/hooks/useReceiver.ts       the event stream: snapshots, reconnection, optimistic writes
 src/hooks/useVolume.ts         volume level and press coalescing
+src/hooks/useInputs.ts         the receiver's sources, and switching between them
+src/hooks/useProfiles.ts       speaker profiles, minus the unnamed factory slots
+src/hooks/useTvTargets.ts      the TV's own sources
+src/hooks/useDisplay.ts        front panel displayed info
 src/hooks/usePlayerMorph.ts    the player's geometry between the strip and the card slot
 src/components/shared/         Card, Panel, Toolbar, DeviceSwitcher, PowerButton, PillList, …
 src/components/pages/          one card per device section

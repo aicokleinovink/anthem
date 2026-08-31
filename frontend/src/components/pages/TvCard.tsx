@@ -1,15 +1,10 @@
 import { Card } from '../shared/Card';
 import { Panel } from '../shared/Panel';
 import { PillList } from '../shared/PillList';
-
-interface TvController {
-  available: boolean;
-  current: string | null;
-  targets: Array<{ key: string; label: string }>;
-  select: (target: string) => void;
-}
+import type { TvController } from '../../hooks/useTvTargets';
 
 interface TvCardProps {
+  /** Owned by the app, not by this card — see InputsCard. */
   controller: TvController;
   offline: boolean;
 }

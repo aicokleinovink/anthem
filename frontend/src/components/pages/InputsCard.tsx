@@ -2,14 +2,13 @@ import { Card } from '../shared/Card';
 import { Panel } from '../shared/Panel';
 import { PillList } from '../shared/PillList';
 import { SignalBars } from '../shared/SignalBars';
-interface InputsController {
-  inputs: Array<{ input: number; name: string }>;
-  selected: number | null;
-  format: string | null;
-  select: (input: number) => void;
-}
+import type { InputsController } from '../../hooks/useInputs';
 
 interface InputsCardProps {
+  /**
+   * Owned by the app, not by this card — switching tabs unmounts the card, and state
+   * living here would reset on every visit.
+   */
   controller: InputsController;
   powerOn: boolean | null;
   offline: boolean;
