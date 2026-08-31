@@ -1,7 +1,8 @@
 import { config } from '../config.js';
 import type { NowPlaying } from '../player/bluos.js';
 import type { TvTarget } from '../tv/targets.js';
-import type { Zone } from '../protocol/commands.js';
+import { TONE_CONTROLS, type ToneControl, type Zone } from '../protocol/commands.js';
+import { TONE_MAX_DB, TONE_MIN_DB, TONE_STEP_DB } from './tone.js';
 import { dbToPercent } from './volume.js';
 import type { ReceiverState } from './state.js';
 
@@ -26,6 +27,16 @@ export interface Snapshot {
     selected: number | null;
     inputName: string | null;
   };
+  /**
+   * Bass, treble and subwoofer trim, in dB, with the range the receiver accepts — the
+   * UI draws its sliders from this rather than hard-coding the hardware's limits.
+   */
+  sound: {
+    controls: Array<{ key: ToneControl; label: string; db: number | null }>;
+    minDb: number;
+    maxDb: number;
+    stepDb: number;
+  };
   display: { info: number | null; options: Array<{ value: number; label: string }> };
   /** What the streamer is playing, or null when there is no streamer or nothing loaded. */
   player: NowPlaying | null;
@@ -37,6 +48,13 @@ export interface Snapshot {
     targets: Array<{ key: string; label: string }>;
   };
 }
+
+/** Labels for the tone controls; the receiver reports only the numbers. */
+export const TONE_LABELS: Record<ToneControl, string> = {
+  bass: 'Bass',
+  treble: 'Treble',
+  subwoofer: 'Subwoofer',
+};
 
 /** Labels for the front panel setting; the receiver reports only the number. */
 export const DISPLAY_OPTIONS = [
@@ -89,6 +107,16 @@ export function snapshot(
       })),
       selected: selected === null ? null : (state.inputProfiles[selected] ?? null),
       inputName: selected === null ? null : (state.inputNames[selected] ?? null),
+    },
+    sound: {
+      controls: TONE_CONTROLS.map((key) => ({
+        key,
+        label: TONE_LABELS[key],
+        db: zoneState.tone[key] ?? null,
+      })),
+      minDb: TONE_MIN_DB,
+      maxDb: TONE_MAX_DB,
+      stepDb: TONE_STEP_DB,
     },
     display: { info: state.frontPanelInfo ?? null, options: DISPLAY_OPTIONS },
     // Stopped is the same as nothing playing as far as the UI is concerned.

@@ -1,10 +1,11 @@
 import { EventEmitter } from 'node:events';
 import { config } from '../config.js';
 import { DeviceOfflineError } from '../errors.js';
-import { commands, type Zone } from '../protocol/commands.js';
+import { commands, TONE_CONTROLS, TONE_KEYS, type ToneControl, type Zone } from '../protocol/commands.js';
 import type { Message } from '../protocol/parse.js';
 import { AnthemConnection } from '../transport/connection.js';
 import { applyMessage, emptyState, type ReceiverState, type ZoneState } from './state.js';
+import { quantiseTone } from './tone.js';
 import { clampDb, dbToPercent, percentToDb } from './volume.js';
 
 /** The receiver has four speaker-profile slots, named or not. */
@@ -90,6 +91,8 @@ export class Receiver extends EventEmitter {
 
       await this.listProfiles();
       if (input !== undefined) await this.getInputProfile(input);
+
+      await this.getTone(1);
 
       await this.getFrontPanelInfo();
     } catch (error) {
@@ -279,6 +282,46 @@ export class Receiver extends EventEmitter {
     );
     applyMessage(this.state, message);
     return this.state.inputProfiles[input];
+  }
+
+  // --- tone ---------------------------------------------------------------
+
+  /**
+   * Read all three trims for a zone. Three paced writes, so it is refresh-time work.
+   *
+   * A control the receiver will not answer is skipped rather than allowed to throw:
+   * these commands are undocumented, so a model or firmware that does not have one
+   * must not take the rest of the refresh down with it. The level simply stays unknown
+   * and the card shows no reading for it.
+   */
+  async getTone(zone: Zone): Promise<Partial<Record<ToneControl, number>>> {
+    for (const control of TONE_CONTROLS) {
+      try {
+        const message = await this.connection.send(
+          commands.toneQuery(zone, control),
+          zoneReply(zone, TONE_KEYS[control]),
+        );
+        applyMessage(this.state, message);
+      } catch (error) {
+        console.error(`[anthem] no ${control} trim: ${(error as Error).message}`);
+      }
+    }
+    return this.state.zones[zone].tone;
+  }
+
+  /**
+   * Set one trim, in dB. The value is put on the receiver's 0.5 dB grid first: it
+   * rejects anything off-grid or out of range outright rather than clamping, which
+   * would surface as a failed write instead of a slightly different level.
+   */
+  async setTone(zone: Zone, control: ToneControl, db: number): Promise<number | undefined> {
+    const target = quantiseTone(db);
+    const message = await this.connection.send(
+      commands.tone(zone, control, target),
+      zoneReply(zone, TONE_KEYS[control]),
+    );
+    applyMessage(this.state, message);
+    return this.state.zones[zone].tone[control];
   }
 
   // --- front panel --------------------------------------------------------

@@ -1,4 +1,4 @@
-import type { Zone } from '../protocol/commands.js';
+import { TONE_CONTROLS, TONE_KEYS, type ToneControl, type Zone } from '../protocol/commands.js';
 import { toBoolean, toNumber, type Message } from '../protocol/parse.js';
 
 export interface ZoneState {
@@ -9,6 +9,8 @@ export interface ZoneState {
   input?: number;
   listeningMode?: number;
   audioFormat?: string;
+  /** Bass, treble and subwoofer trim, in dB. See device/tone.ts for the range. */
+  tone: Partial<Record<ToneControl, number>>;
 }
 
 export interface ReceiverState {
@@ -33,7 +35,7 @@ export function emptyState(): ReceiverState {
     inputNames: {},
     profileNames: {},
     inputProfiles: {},
-    zones: { 1: {}, 2: {} },
+    zones: { 1: { tone: {} }, 2: { tone: {} } },
   };
 }
 
@@ -67,6 +69,14 @@ export function applyMessage(state: ReceiverState, message: Message): ReceiverSt
       case 'AIN':
         zone.audioFormat = message.value;
         break;
+      case 'TON0':
+      case 'TON1':
+      case 'LEV1': {
+        const control = TONE_CONTROLS.find((name) => TONE_KEYS[name] === message.key);
+        const value = toNumber(message.value);
+        if (control !== undefined && value !== undefined) zone.tone[control] = value;
+        break;
+      }
       // VUP / VDN are commands only; the receiver answers them with a VOL frame.
       default:
         break;

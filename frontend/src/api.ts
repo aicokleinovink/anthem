@@ -15,6 +15,13 @@ export interface Snapshot {
     selected: number | null;
     inputName: string | null;
   };
+  /** Bass, treble and subwoofer trim, in dB, with the range the receiver accepts. */
+  sound: {
+    controls: Array<{ key: ToneControl; label: string; db: number | null }>;
+    minDb: number;
+    maxDb: number;
+    stepDb: number;
+  };
   display: { info: number | null; options: Array<{ value: number; label: string }> };
   /** What the streamer is playing; null when nothing is loaded. */
   player: NowPlaying | null;
@@ -25,6 +32,9 @@ export interface Snapshot {
     targets: Array<{ key: string; label: string }>;
   };
 }
+
+/** The three trims the Sound card offers. Named by the API, not by position. */
+export type ToneControl = 'bass' | 'treble' | 'subwoofer';
 
 export interface NowPlaying {
   state: 'playing' | 'paused' | 'loading' | 'stopped';
@@ -89,6 +99,8 @@ export const setVolumeDb = (db: number) => write('/api/volume', { db });
 export const selectInput = (input: number) => write('/api/input', { input });
 export const setSpeakerProfile = (profile: number) => write('/api/speaker-profile', { profile });
 export const setDisplay = (info: number) => write('/api/display', { info });
+/** One trim at a time, which is all a slider ever moves. */
+export const setSound = (control: ToneControl, db: number) => write('/api/sound', { [control]: db });
 
 export const selectTvTarget = (target: string) => write('/api/tv', { target });
 

@@ -54,6 +54,8 @@ deeper and a relative hop from it would miss.
 | PUT | `/api/zones/:zone/input` | `{ "input": 3 }` | `{ selected }` |
 | GET | `/api/zones/:zone/speaker-profiles` | | `{ profiles, input, inputName, selected }` |
 | PUT | `/api/zones/:zone/speaker-profile` | `{ "profile": 1 }` (optionally `"input"`) | `{ input, selected }` |
+| GET | `/api/zones/:zone/sound` | | `{ controls: [{ key, label, db }], minDb, maxDb, stepDb }` |
+| PUT | `/api/zones/:zone/sound` | any of `{ "bass": 4.5, "treble": -3, "subwoofer": 2 }` | `{ controls, minDb, maxDb, stepDb }` |
 | GET | `/api/display` | | `{ info, options }` |
 | GET | `/api/events` | | Server-sent events: the whole state, on connect and on every change |
 | POST | `/api/player` | `{ "action": "play" \| "pause" \| "next" \| "previous" }`, or `{ "action": "seek", "seconds": n }` | `{ action }` |
@@ -175,6 +177,33 @@ this same protocol:
 
 Verified end to end against the receiver, including reading a value back after writing it.
 
+## Tone and subwoofer trim
+
+Bass, treble and the subwoofer channel level, for the main zone. Also absent from the
+protocol doc, and also found in the receiver's own web app, whose `COMMAND` object names
+them `Z_TON0` (bass), `Z_TON1` (treble) and `Z_LEV1` (subwoofer level):
+
+- `Z1TON0?;` / `Z1TON0<db>;` — bass
+- `Z1TON1?;` / `Z1TON1<db>;` — treble
+- `Z1LEV1?;` / `Z1LEV1<db>;` — subwoofer
+
+Unlike `Z1VOL`, these **are** exact absolute setters — `Z1TON0-2.5;` lands on -2.5 dB and
+reads back as `Z1TON0-2.5`. The range is **-10.0 .. +10.0 dB on a 0.5 dB grid**, which is
+also what the web app puts on its sliders.
+
+**The receiver rejects an illegal value rather than clamping it.** `Z1TON015;` and
+`Z1TON00.25;` both came back as `!E...` with the level unchanged — so `device/tone.ts`
+rounds and clamps before anything reaches the wire. The route refuses an out-of-range
+number outright (400): a slider cannot produce one, so a request that does is a mistake.
+
+Values are written with one decimal, which is the form the receiver itself uses: it accepts
+`Z1TON05;` but answers `Z1TON05.0`. Changes are pushed to every connected client like
+everything else, verified with two sockets open at once.
+
+Anthem's app exposes the other channel levels too (`Z_LEV5` front, `Z_LEV7` center,
+`Z_LEV8` surround, `Z_LEVD` LFE, and the heights) on the same pattern; only these three
+are wired up.
+
 ## Front panel display
 
 `GCFPDI` is Setup > General > Front Panel Displayed Info: **0 = All, 1 = Volume Only**.
@@ -185,7 +214,8 @@ labels, which the device itself never sends.
 
 Raw TCP on port **14999**, ASCII, every command and reply terminated by `;`.
 Set is `Z1POW1;`, query is `Z1POW?;`, and both are answered in set form. Rejected commands
-come back as `!I<command>`. The receiver also **pushes** status frames whenever anything
+come back prefixed with `!` — `!I<command>` for one it does not understand, `!E<command>`
+for one it understands but will not accept (a tone value off the 0.5 dB grid, say). The receiver also **pushes** status frames whenever anything
 changes at the front panel or on the remote, which is why this holds one long-lived socket
 and folds every frame into a cache instead of polling.
 
@@ -224,6 +254,7 @@ src/
   protocol/parse.ts      frame splitting and parsing
   device/receiver.ts     power/volume/mute operations
   device/state.ts        cache fed by replies and pushed frames alike
+  device/tone.ts         the tone grid the receiver will accept
   device/volume.ts       dB <-> percent, clamping
   routes/                power, volume, system
 scripts/probe.ts         read-only protocol probe against the real unit
@@ -232,6 +263,6 @@ scripts/probe.ts         read-only protocol probe against the real unit
 ## Not built yet
 
 Input select (`Z1INP`, names via `ISnIN?`, count via `ICN?` — your unit reports 4),
-listening mode (`Z1ALM`), zone 2 volume routes, tone/subwoofer trim, ARC on/off,
+listening mode (`Z1ALM`), zone 2 volume routes, the remaining channel trims, ARC on/off,
 tuner presets, signal info (`Z1AIN` — currently reporting `Dolby D+`), plus an SSE stream
 of pushed state changes and receiver discovery. Each is a small addition on this base.

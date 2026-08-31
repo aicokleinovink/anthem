@@ -7,7 +7,8 @@ labels on glass.
 
 Two rows of chrome sit above the card. A **device switcher** — TV · Anthem — chooses
 whose controls you are looking at, and the **section toolbar** below it swaps the card:
-**Inputs** for the TV, **Volume**, **Inputs** and **Settings** for the receiver. The
+**Inputs** for the TV, **Volume**, **Sound**, **Inputs** and **Settings** for the
+receiver. The
 **power button** on the right of the toolbar turns the receiver on and off.
 
 Vite + React + TypeScript. It talks to the Express API in `../api`, which owns the TCP
@@ -293,6 +294,25 @@ The receiver always reports four profile slots. The ones nobody has renamed come
 Corner). If none have been renamed it shows all four rather than an empty list, and naming a
 third profile on the receiver makes it appear on its own.
 
+## Sound
+
+Three trims — **Bass**, **Treble** and **Subwoofer** — each in its own panel with its
+current level above the slider. Anthem's own app offers the rest of the channel levels
+too (Front, Front Wide, Center, and so on); these three are the ones that get touched.
+
+The range is **−10.0 to +10.0 dB in 0.5 dB steps**, and it comes from the API rather than
+being written down here — the receiver's limits belong to the receiver.
+
+**The fill runs from the centre out to the thumb**, not from the left. A trim is an offset
+from flat, so at 0.0 dB there is nothing filled, which is the honest picture. The reading
+carries its sign and uses tabular figures, so it does not shuffle sideways during a drag.
+
+**A drag is coalesced, like volume.** `hooks/useSound.ts` keeps only the *latest* value per
+control and shares one in-flight slot across all three, so a drag that produces a value per
+frame reaches the receiver as a handful of writes ending on the value you let go at. Without
+that the receiver would silently drop most of them — it drops commands that arrive
+back-to-back, which is also why the API paces its writes.
+
 ## What the percentage means
 
 The dial shows the receiver's **full scale**: 0% at −90 dB, 100% at +10 dB. The receiver's
@@ -403,6 +423,7 @@ src/hooks/useInputs.ts         the receiver's sources, and switching between the
 src/hooks/useProfiles.ts       speaker profiles, minus the unnamed factory slots
 src/hooks/useTvTargets.ts      the TV's own sources
 src/hooks/useDisplay.ts        front panel displayed info
+src/hooks/useSound.ts          bass, treble and subwoofer trim, and drag coalescing
 src/hooks/usePlayerMorph.ts    the player's geometry between the strip and the card slot
 src/components/shared/         Card, Panel, Toolbar, DeviceSwitcher, PowerButton, PillList, …
 src/components/pages/          one card per device section

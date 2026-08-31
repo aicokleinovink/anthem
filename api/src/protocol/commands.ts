@@ -32,6 +32,9 @@ export type Zone = 1 | 2;
  */
 export const ZONE_KEYS = [
   'PVOL', // volume as a percentage, 0-100
+  'TON0', // tone: bass level in dB, one decimal
+  'TON1', // tone: treble level in dB, one decimal
+  'LEV1', // channel level: subwoofer, in dB, one decimal
   'POW', //  power, 0 | 1
   'VOL', //  volume in dB, one decimal
   'VUP', //  step volume up by 1 dB (takes NO argument)
@@ -69,6 +72,26 @@ export function zoneQuery(zone: Zone, key: ZoneKey): string {
 /** Build a global query: `globalQuery('IDM')` -> `"IDM?;"`. */
 export function globalQuery(key: GlobalKey): string {
   return `${key}?${TERMINATOR}`;
+}
+
+/** The three tone controls this app exposes, and the zone key each one is written to. */
+export const TONE_KEYS = {
+  bass: 'TON0',
+  treble: 'TON1',
+  subwoofer: 'LEV1',
+} as const satisfies Record<string, ZoneKey>;
+
+export type ToneControl = keyof typeof TONE_KEYS;
+
+export const TONE_CONTROLS = Object.keys(TONE_KEYS) as ToneControl[];
+
+/**
+ * The receiver takes and reports these as one decimal. It accepts `5` and answers
+ * `5.0`, but never sends anything else, so we write what it writes.
+ */
+function formatToneValue(db: number): string {
+  // -0 would format as "-0.0"; the unit has never been asked for that, so do not.
+  return (db === 0 ? 0 : db).toFixed(1);
 }
 
 export const commands = {
@@ -111,6 +134,20 @@ export const commands = {
 
   /** Name of speaker profile n (1-based), e.g. `SSSP10?;` -> `SSSP10Center;`. */
   profileNameQuery: (profile: number) => `SSSP${Math.round(profile)}0?${TERMINATOR}`,
+
+  /**
+   * Tone and subwoofer trim. Not in the published protocol; the keys came from the
+   * receiver's own web app, where `Z_TON0` is bass, `Z_TON1` treble and `Z_LEV1` the
+   * subwoofer channel level.
+   *
+   * Unlike `Z1VOL`, these ARE exact absolute setters: `Z1TON0-2.5;` lands on -2.5 dB and
+   * reads back as `Z1TON0-2.5`. The value must be one decimal on a 0.5 dB grid inside
+   * -10.0 .. +10.0 — anything else is REJECTED (`!EZ1TON015`) rather than clamped, so
+   * callers must round and clamp before sending. See device/tone.ts.
+   */
+  tone: (zone: Zone, control: ToneControl, db: number) =>
+    zoneCommand(zone, TONE_KEYS[control], formatToneValue(db)),
+  toneQuery: (zone: Zone, control: ToneControl) => zoneQuery(zone, TONE_KEYS[control]),
 
   /** Format of the signal currently arriving, e.g. "Dolby D+" or "No Signal". */
   audioFormatQuery: (zone: Zone) => zoneQuery(zone, 'AIN'),
