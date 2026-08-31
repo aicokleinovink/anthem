@@ -108,6 +108,24 @@ body,
   height: 100%;
 }
 
+/*
+ * No overscroll, in either sense: no rubber-band bounce and no pull-to-refresh.
+ *
+ * Safari's pull-to-refresh is on by default and reloaded the app on any downward drag,
+ * which is not a gesture this app can spare — the expanded player *collapses* on a drag
+ * down from its grab bar, so at scroll-top the two were competing for the same finger and
+ * Safari could win part-way through the morph. Nothing here scrolls (the shell is one
+ * viewport tall and its content is centred), so the bounce was only ever telling you the
+ * page had somewhere to go that it does not.
+ *
+ * Set on `html` as well as `body`: the viewport takes this from the root element, and
+ * Safari does not honour it on `body` alone.
+ */
+html,
+body {
+  overscroll-behavior: none;
+}
+
 body {
   margin: 0;
   background: var(--canvas);
