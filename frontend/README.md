@@ -120,8 +120,10 @@ rather than on the shell, so the toolbar above is unaffected.
 
 Two things to know if you change this:
 
-- Every card is the same height (`--card-height`, the natural height of the tallest one), so
-  swapping sections never resizes the surface under your thumb.
+- Every card is the same height (`--card-height`, set deliberately above the natural height
+  of the tallest one so none sits on the boundary), so swapping sections never resizes the
+  surface under your thumb. A card at exactly its natural height grows past the token as
+  soon as its content renders a fraction taller, and moves the toolbar with it.
 - The content stagger is per `nth-child`, and the rules have to cover **every** child a
   card can have. When the settings card grew to five children, the two beyond the rules
   fell back to no delay and animated in first — the bottom of the card arriving before the
