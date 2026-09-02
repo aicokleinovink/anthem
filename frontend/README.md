@@ -54,6 +54,11 @@ rounded source ends up double-rounded.
 Each control section is its own card on a shared shell (`components/shared/Card.tsx`), so adding
 one is a component plus an entry in `SECTIONS` in `components/shared/Toolbar.tsx`.
 
+`SECTIONS` is **per device**, not one flat list: it maps each device to the sections it
+offers. `Inputs` appears under both and means that device's own sources — the TV's watch
+targets, or the receiver's inputs — so it is the one section that carries across when you
+switch device. Anything else falls back to the new device's first section.
+
 **The header's right-hand slot has one meaning: a live fact about whatever the card
 controls** — the signal format arriving on Inputs, the input a speaker profile applies to on
 Settings, what the TV is watching — overridden by `Standby` or `Offline`, which are drawn in
@@ -63,11 +68,6 @@ which put two different kinds of thing in one slot on one card — Inputs read `
 until the format was unknown and then named the device — and repeated what the device
 switcher above already says. A slot that is silent unless something is worth saying is
 worth more than one that is always full.
-
-`SECTIONS` is **per device**, not one flat list: it maps each device to the sections it
-offers. `Inputs` appears under both and means that device's own sources — the TV's watch
-targets, or the receiver's inputs — so it is the one section that carries across when you
-switch device. Anything else falls back to the new device's first section.
 
 The device switcher (`components/shared/DeviceSwitcher.tsx`) has no surface of its own:
 plain text on the canvas, above the toolbar and closer to it than the toolbar is to the
