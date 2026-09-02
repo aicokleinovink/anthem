@@ -158,6 +158,8 @@
 }
 
 .skip {
+  /* Own positioning context, for the hit-area overlay below. */
+  position: relative;
   display: grid;
   place-items: center;
   width: 40px;
@@ -172,6 +174,22 @@
   transition:
     background 180ms ease,
     transform 140ms var(--spring);
+}
+
+/*
+ * Taller than it looks, so a thumb gets 44px. Height only: the cluster is 1px-gapped and
+ * three buttons wide, so 44px of width apiece would either overlap the play button or
+ * take 8px from the title, which is the one thing on the strip that is short of room
+ * (#57). The expanded player's 52px buttons need none of this.
+ */
+.skip::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 44px;
+  transform: translateY(-50%);
 }
 
 .play {

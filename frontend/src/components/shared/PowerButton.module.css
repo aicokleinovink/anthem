@@ -1,4 +1,6 @@
 .power {
+  /* Own positioning context, for the hit-area overlay below. */
+  position: relative;
   display: grid;
   place-items: center;
   width: 40px;
@@ -28,6 +30,19 @@
 .on {
   background: rgb(255 255 255 / 38%);
   color: var(--label);
+}
+
+/* 40px is the size the key wants to be next to the tabs; 44px is the size a thumb wants.
+   A transparent overlay settles it, and like the tabs' it stays inside the bar. */
+.power::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .power svg {
