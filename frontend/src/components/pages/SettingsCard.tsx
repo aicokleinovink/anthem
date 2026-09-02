@@ -19,8 +19,8 @@ export function SettingsCard({ profiles, display, powerOn, offline }: SettingsCa
   return (
     <Card
       title="Settings"
-      // The header already names the input, which is what the speaker profile applies to.
-      status={standby ? 'Standby' : offline ? 'Offline' : (profiles.inputName ?? 'Anthem MRX 540')}
+      // The header names the input, which is what the speaker profile applies to.
+      status={standby ? 'Standby' : offline ? 'Offline' : (profiles.inputName ?? undefined)}
       statusStrong={standby || offline}
       dimmed={locked}
     >

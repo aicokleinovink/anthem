@@ -24,7 +24,7 @@ export function InputsCard({ controller, powerOn, offline }: InputsCardProps) {
   return (
     <Card
       title="Inputs"
-      status={standby ? 'Standby' : offline ? 'Offline' : (format ?? 'Anthem MRX 540')}
+      status={standby ? 'Standby' : offline ? 'Offline' : (format ?? undefined)}
       statusStrong={standby || offline}
       dimmed={locked}
     >
