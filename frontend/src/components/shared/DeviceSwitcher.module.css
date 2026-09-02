@@ -10,6 +10,8 @@
   align-items: center;
 }
 
+/* Kept at the quietest tier, and below both devices now that the inactive one has been
+   lifted out of it: the decoration must not read as level with a control. */
 .separator {
   color: var(--label-3);
   font-size: 12px;
@@ -22,14 +24,23 @@
   padding: 4px 10px;
   border: 0;
   background: none;
-  color: var(--label-3);
+  /*
+   * --label-2, the tier every other inactive control in the app is painted in — the tabs,
+   * the input rows, the profile rows. It used to be --label-3, which is where the
+   * decoration lives: the same ink as the `·` between the two devices, which is
+   * aria-hidden. A control sharing its colour with an aria-hidden glyph reads as a
+   * caption, and this one changes what the whole app is talking to.
+   */
+  color: var(--label-2);
   font: inherit;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.02em;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: color 200ms ease;
+  transition:
+    color 200ms ease,
+    transform 140ms var(--spring);
 }
 
 /*
@@ -64,12 +75,31 @@
   right: -8px;
 }
 
+/* The same press the power key and the transport buttons use. It had none at all, which
+   is the other half of not looking pressable. The overlay above rides along with it. */
+.device:active {
+  transform: scale(0.94);
+}
+
+/*
+ * Weight as well as ink. The two devices sit on the album art with no surface under them,
+ * and a cover can be any lightness — colour alone is the one distinction that cannot be
+ * relied on here, which is the same reason the power key carries both brightness and a
+ * glyph.
+ */
 .deviceActive {
   color: var(--label);
+  font-weight: 700;
 }
 
 .device:focus-visible {
   outline: 2px solid var(--label);
   outline-offset: 2px;
   border-radius: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .device {
+    transition: none;
+  }
 }
