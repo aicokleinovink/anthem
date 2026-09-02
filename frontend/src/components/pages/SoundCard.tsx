@@ -30,7 +30,7 @@ export function SoundCard({ controller, powerOn, offline }: SoundCardProps) {
   return (
     <Card
       title="Sound"
-      status={standby ? 'Standby' : offline ? 'Offline' : 'Anthem MRX 540'}
+      status={standby ? 'Standby' : offline ? 'Offline' : undefined}
       statusStrong={standby || offline}
       dimmed={locked}
     >

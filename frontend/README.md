@@ -54,6 +54,16 @@ rounded source ends up double-rounded.
 Each control section is its own card on a shared shell (`components/shared/Card.tsx`), so adding
 one is a component plus an entry in `SECTIONS` in `components/shared/Toolbar.tsx`.
 
+**The header's right-hand slot has one meaning: a live fact about whatever the card
+controls** — the signal format arriving on Inputs, the input a speaker profile applies to on
+Settings, what the TV is watching — overridden by `Standby` or `Offline`, which are drawn in
+full ink because they need noticing. When a card has no such fact, the slot is simply
+absent: Volume and Sound show nothing at rest. It used to fall back to `Anthem MRX 540`,
+which put two different kinds of thing in one slot on one card — Inputs read `2.0 PCM`
+until the format was unknown and then named the device — and repeated what the device
+switcher above already says. A slot that is silent unless something is worth saying is
+worth more than one that is always full.
+
 `SECTIONS` is **per device**, not one flat list: it maps each device to the sections it
 offers. `Inputs` appears under both and means that device's own sources — the TV's watch
 targets, or the receiver's inputs — so it is the one section that carries across when you

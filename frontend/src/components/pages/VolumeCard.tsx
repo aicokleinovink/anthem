@@ -41,7 +41,7 @@ export function VolumeCard({ controller, powerOn, offline }: VolumeCardProps) {
   return (
     <Card
       title="Volume"
-      status={standby ? 'Standby' : offline ? 'Offline' : 'Anthem MRX 540'}
+      status={standby ? 'Standby' : offline ? 'Offline' : undefined}
       statusStrong={standby || offline}
       dimmed={locked}
     >
