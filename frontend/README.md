@@ -65,6 +65,15 @@ card, so it reads as a heading over the section tabs rather than as a second set
 It is a group of `aria-pressed` buttons; the section tabs remain the tablist that owns the
 card below.
 
+**Plain is not the same as quiet.** Both devices are painted in `--label-2`, the tier every
+other inactive control in the app uses, and the active one adds weight on top of full ink.
+The inactive device used to be `--label-3` — the same colour as the `·` between them, which
+is `aria-hidden` — and a control that shares its ink with decoration reads as a caption
+rather than as something you can press. `--label-3` is the decoration tier here; nothing
+interactive belongs in it. The weight difference is there because these two sit on the
+album art with no surface underneath, so colour alone is the one distinction that cannot be
+relied on — the same reason the power key carries both brightness and a glyph.
+
 **The TV's lone tab is rendered without the sliding pill.** A pill that cannot move looks
 broken, so the single active tab paints the pill's background on itself and
 `useSlidingPill` is not measured at all — it is only meaningful with two or more tabs.
