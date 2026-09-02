@@ -17,6 +17,8 @@
 }
 
 .device {
+  /* Own positioning context, for the hit-area overlay below. */
+  position: relative;
   padding: 4px 10px;
   border: 0;
   background: none;
@@ -28,6 +30,38 @@
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: color 200ms ease;
+}
+
+/*
+ * 22px of text on bare canvas, so the hit area is an overlay rather than padding — this
+ * has no surface to grow.
+ *
+ * Deliberately lopsided. Split evenly it would reach 11px each way and cover the top 5px
+ * of the toolbar below, and a positioned pseudo-element paints above it, so the tabs
+ * would lose their top edge to the device switcher. Upward there is only the shell's own
+ * 24px of breathing room, so it takes 16px there and stops inside the 6px gap below.
+ */
+.device::before {
+  content: '';
+  position: absolute;
+  top: -16px;
+  bottom: -6px;
+  left: 0;
+  right: 0;
+}
+
+/*
+ * `TV` is only 37px of label, so height alone does not get it to 44px square. The two
+ * buttons are 3.5px apart, so the width has to come from the outside of the row — free
+ * canvas on both sides — rather than from between them. A third device would sit in the
+ * middle and get height only; there are two.
+ */
+.slot:first-child .device::before {
+  left: -8px;
+}
+
+.slot:last-child .device::before {
+  right: -8px;
 }
 
 .deviceActive {

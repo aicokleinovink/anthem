@@ -72,6 +72,25 @@
     color 200ms ease;
 }
 
+/*
+ * The pill is as small as four tabs and the power button allow on a 375pt phone, which
+ * left the tab 33px tall — under the 44px a thumb needs. The hit area is a transparent
+ * overlay instead of padding, because padding would grow the sliding pill with it: the
+ * pill is measured from the tab's own box.
+ *
+ * It fits inside the bar (7px padding + 33px tab + 7px = 47px), so it reaches nothing
+ * above or below.
+ */
+.tab::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 44px;
+  transform: translateY(-50%);
+}
+
 .tabActive {
   color: var(--label);
 }
