@@ -387,6 +387,28 @@ below is the `tabpanel` they control, labelled by the active tab. Buttons carry 
 (`Volume up`, `Turn receiver off`) and selected rows use `aria-pressed`. Every animation is
 dropped under `prefers-reduced-motion`.
 
+**Every control is at least 44px in both directions, and most of them do not look it.**
+The chrome is drawn small on purpose — four tabs, a power key and the device switcher have
+to fit a 375pt phone — so the hit area is a transparent `::before` overlay rather than
+padding. Padding would have grown what you can see: the toolbar's sliding pill is measured
+from the tab's own box, and the tabs are the thing the width is tight for. Two of the
+overlays are shaped rather than centred, and the shapes are load-bearing:
+
+- **The device switcher grows upward**, 16px up and 6px down. Split evenly it would have
+  reached 11px each way and covered the top 5px of the toolbar — and a positioned
+  pseudo-element paints above it, so the tabs would have lost their top edge to the
+  switcher. Its width comes from the outside of the row too, since the two buttons sit
+  3.5px apart.
+- **The player's skip buttons grow in height only.** The transport cluster is three
+  buttons at a 1px gap, so 44px of width apiece would either overlap play or take 8px
+  from the title, which is the one thing on the strip short of room.
+
+**Nothing in the app is selectable.** There is no prose here — every label is on a button —
+and a slow press is a normal way to push something on a phone, so `user-select: none` sits
+in the reset for the same reason `touch-action: manipulation` does. It is blanket: the one
+string worth copying is the track title, and that sits on top of the strip's invisible
+expand button, so opting it back in would put iOS's callout on the control it covers.
+
 ## Styling
 
 **CSS Modules, one file per component, sitting next to it** — `Card.module.css` beside
