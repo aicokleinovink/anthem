@@ -106,7 +106,9 @@ export class WebosTv extends EventEmitter {
   #inputSocket(): Promise<WebSocket> {
     if (this.#input) return this.#input;
 
-    this.#input = (async () => {
+    // Built into a local first, so everything below can refer to it by name — including
+    // the handlers inside, which used to close over a binding declared after them.
+    const promise = (async () => {
       const answer = await this.#request(
         'ssap://com.webos.service.networkinput/getPointerInputSocket',
         {},
@@ -127,17 +129,19 @@ export class WebosTv extends EventEmitter {
         socket.onerror = () => reject(new Error('TV input socket would not open'));
       });
       // A dead input socket must not be handed to the next press.
-      socket.onclose = () => {
-        if (this.#input === promise) this.#input = undefined;
-      };
+      socket.onclose = () => forget();
       return socket;
     })();
 
-    const promise = this.#input;
-    // A failed attempt is not cached; the next press tries again.
-    promise.catch(() => {
+    /** Drop the cache, unless a later attempt has already replaced it. */
+    const forget = () => {
       if (this.#input === promise) this.#input = undefined;
-    });
+    };
+
+    // A failed attempt is not cached either; the next press tries again.
+    promise.catch(forget);
+
+    this.#input = promise;
     return promise;
   }
 
