@@ -110,6 +110,82 @@ test.describe('expanding', () => {
     await expect(player(page).getByRole('button', { name: 'Expand player' })).toBeVisible();
   });
 
+  /*
+   * The player is operable without a pointer, which took real care: the strip is a real
+   * button underneath the layout rather than a click handler on the surface, and the
+   * grab bar is a button as well as a drag target because dragging has no keyboard
+   * equivalent. Neither is reachable by a pointer test, so neither was covered.
+   */
+  test('opens and closes from the keyboard alone', async ({ page, control }) => {
+    await open(page);
+    await control.player(TRACK);
+
+    const expand = player(page).getByRole('button', { name: 'Expand player' });
+    await expand.focus();
+    await expect(expand).toBeFocused();
+    await page.keyboard.press('Enter');
+
+    const collapse = player(page).getByRole('button', { name: 'Collapse player' });
+    await expect(collapse).toBeVisible();
+
+    await collapse.focus();
+    await page.keyboard.press('Enter');
+    await expect(player(page).getByRole('button', { name: 'Expand player' })).toBeVisible();
+  });
+
+  /*
+   * The drag gesture, and the one situation `inert` exists for.
+   *
+   * `progress` is `drag ?? (expanded ? 1 : 0)`, so a click is only ever 0 or 1 and one
+   * layout is always the only one mounted. A half-finished *drag* is the sole state
+   * where both are in the DOM at once — which is why this has to drag rather than click
+   * to test it, and why a click-driven version passes with `inert` deleted entirely.
+   */
+  test('a half-finished drag mounts both layouts but tabs to only one', async ({
+    page,
+    control,
+  }) => {
+    await open(page);
+    await control.player(TRACK);
+    await player(page).getByRole('button', { name: 'Expand player' }).click();
+
+    // The surface is still travelling into the card slot for half a second after the
+    // click, and the handle travels with it — grabbing it before it settles means the
+    // pointerdown lands where the handle *was*, and no drag ever starts.
+    const handle = player(page).getByRole('button', { name: 'Collapse player' });
+    await expect
+      .poll(async () => Math.round((await player(page).boundingBox())!.height))
+      .toBe(Math.round((await page.getByRole('tabpanel').boundingBox())!.height));
+
+    const grab = (await handle.boundingBox())!;
+    const from = { x: grab.x + grab.width / 2, y: grab.y + grab.height / 2 };
+
+    // Held, not released: the surface stays wherever the finger left it, so what follows
+    // runs against a genuinely half-morphed player.
+    await page.mouse.move(from.x, from.y);
+    await page.mouse.down();
+    await page.mouse.move(from.x, from.y + 120, { steps: 8 });
+
+    const playPause = () =>
+      player(page).evaluate((el) => {
+        const all = [...el.querySelectorAll('button')].filter((button) =>
+          /^(Play|Pause)$/.test(button.getAttribute('aria-label') ?? ''),
+        );
+        // What a Tab could actually reach: `aria-hidden` alone would not stop it.
+        return { mounted: all.length, focusable: all.filter((b) => !b.closest('[inert]')).length };
+      });
+
+    // Both layouts are really here — otherwise this test would be proving nothing.
+    expect(await playPause()).toEqual({ mounted: 2, focusable: 1 });
+
+    // Far enough down to be a collapse rather than a snap back.
+    await page.mouse.move(from.x, from.y + 260, { steps: 6 });
+    await page.mouse.up();
+
+    await expect(player(page).getByRole('button', { name: 'Expand player' })).toBeVisible();
+    expect(await playPause()).toEqual({ mounted: 1, focusable: 1 });
+  });
+
   test('seeks the streamer, and will not offer to for live radio', async ({ page, control }) => {
     await open(page);
     await control.player(TRACK);

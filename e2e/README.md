@@ -11,6 +11,11 @@ npx playwright install chromium   # once
 npm run e2e
 ```
 
+`npm run ui` opens Playwright's UI mode instead — pick tests, re-run on save, step through
+the DOM snapshot timeline. It re-runs the *test* on save, not the app: the suite serves
+`frontend/dist`, so an edit under `frontend/src` needs a rebuild before the re-run means
+anything.
+
 The suite starts its own server: it builds the frontend and runs
 [`api/scripts/serve-fake.ts`](../api/scripts/serve-fake.ts), which is `createApp` with fake
 clients in place of the three real ones. That is one process on one port serving the built
@@ -68,6 +73,22 @@ speaker-profile off-by-one and the hiding of unnamed slots, the front panel disp
 setting, the two device groups dispatching to the right device, now-playing, a change
 pushed by the receiver landing without a reload, and losing the API and recovering from it.
 
+Three more that are worth knowing the shape of:
+
+- **`standby.spec.ts`** — the app's *other* lock. Standby reaches the same controls as
+  offline by a different route (`powerOn === false` rather than a dead stream), so it can
+  regress on its own; the card has to say Standby rather than Offline, and the power
+  button has to stay live because it is the way out.
+- **The drag in `player.spec.ts`** — `progress` is `drag ?? (expanded ? 1 : 0)`, so a
+  click is only ever 0 or 1 and one layout is always the only one mounted. A half-finished
+  drag is the *sole* state where both are in the DOM, which makes it the only way to test
+  what `inert` is for. A click-driven version of that test passes with `inert` deleted.
+- **`layout.spec.ts`** — geometry at 375pt, the width the app is actually used at. It
+  asserts relationships rather than pixel counts: the title column gets exactly the
+  remainder after artwork, transport, gap and padding, and a longer title changes neither
+  the strip's height nor the transport's width. #57 sat as an unverified hunch for a week
+  because nothing in the suite rendered the app this narrow.
+
 ## Writing tests
 
 - **Query by role or label, never by class.** CSS Modules hash their class names, and a
@@ -81,6 +102,13 @@ pushed by the receiver landing without a reload, and losing the API and recoveri
   selecting the input or profile that is *already* selected is a no-op — so a test that
   assumes a starting point passes without doing anything the moment something before it
   changes. `npx playwright test --repeat-each=3` catches this; three tests needed it.
+- **Check a new test fails for its own reason.** Break the thing it covers and watch it
+  go red — two tests here were written, passed, and turned out to be proving nothing
+  until that check was run.
+- **At 375pt, settle the animations before measuring.** Cards enter with a sideways
+  slide, so the document is genuinely wider than the viewport while it runs; waiting on
+  `document.getAnimations()` is the difference between a layout assertion and a
+  screenshot of an animation.
 - Out of scope here: screenshot regression (animations, plus the throttling described in
   CLAUDE.md, make snapshots flaky), error and reconnect paths, and anything needing hardware.
 
