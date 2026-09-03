@@ -29,6 +29,31 @@ interface PictureCardProps {
  * coalesce on the way out — see `useBacklight`, which exists because the shared
  * optimistic write drops anything sent while a write is already in flight.
  */
+/**
+ * Four states, which are easy to conflate and are not the same thing:
+ *
+ * - **Offline** — this app cannot reach its own API.
+ * - **Off** — the API is fine and the set is not reachable. It cannot be woken over the
+ *   network, so that is the end of the story.
+ * - **Unavailable** — the set is on, but it reports no brightness. That is what a client
+ *   key paired before the settings permissions gets, and re-pairing is what fixes it.
+ * - Otherwise the card is live, and the slot says what the number *is*.
+ */
+function status({
+  offline,
+  available,
+  ready,
+}: {
+  offline: boolean;
+  available: boolean;
+  ready: boolean;
+}): string {
+  if (offline) return 'Offline';
+  if (!available) return 'Off';
+  if (!ready) return 'Unavailable';
+  return 'OLED pixel brightness';
+}
+
 export function PictureCard({ controller, offline }: PictureCardProps) {
   const { available, value: backlight, step } = controller;
   const { ripples, spawn } = useRipples();
@@ -44,12 +69,7 @@ export function PictureCard({ controller, offline }: PictureCardProps) {
   return (
     <Card
       title="Picture"
-      /*
-       * The third state here is not "off": a set that is on but whose client key predates
-       * the settings permissions cannot report a value at all, and saying "Unavailable"
-       * is honest about the difference. Re-pairing is what fixes it.
-       */
-      status={offline ? 'Offline' : !available ? 'Off' : ready ? 'OLED pixel brightness' : 'Unavailable'}
+      status={status({ offline, available, ready })}
       statusStrong={offline || !available || !ready}
       dimmed={locked}
     >
