@@ -188,9 +188,19 @@ Two more things about this corner:
   request with `500 Application error`, which reads as a broken service rather than as a
   typo. That cost a detour.
 - **There is no subscription for it.** The value is read on connect and again after each
-  write, so a change made with the set's own remote is not noticed until then. The API
-  therefore reads before every write — brightness moves as a *step*, never as a level, so
-  the app can never overwrite the set with a stale number.
+  write, so a change made with the set's own remote is not noticed until then. Brightness
+  moves as a *step*, never as a level, so the app can never overwrite the set with a
+  stale number.
+- **The set applies the change a beat after the alert closes.** A read taken straight
+  afterwards returns the *old* value — which then goes out on the stream and yanks the
+  number on screen back to where it was. `stepBacklight` waits before confirming, and
+  only once the presses have stopped.
+- **Presses have to accumulate, not queue.** They arrive faster than the bridge carries
+  them, and two writes that each read the set's current value both compute the same
+  target: three quick presses land as one step of ten. So the pending *target* is what a
+  press is added to, one write at a time drains it, and pressing faster than the set can
+  keep up loses nothing. Same shape as the receiver's volume coalescing, for the same
+  reason.
 
 Two findings from the real set worth not re-learning:
 

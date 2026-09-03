@@ -28,6 +28,9 @@ export class WebosTv extends EventEmitter {
   #input?: Promise<WebSocket>;
   /** When the last key went out, so presses can be paced rather than dumped. */
   #lastKeyAt = 0;
+  /** Where brightness is heading, while a write is on its way to the set. */
+  #backlightTarget: number | null = null;
+  #writingBacklight = false;
 
   constructor(
     private readonly host = config.tvHost,
@@ -158,7 +161,57 @@ export class WebosTv extends EventEmitter {
   }
 
   /**
-   * Set it, which the set will not simply let us do.
+   * Step the brightness, which is the only way this is offered.
+   *
+   * Not an absolute level, and not one write per press. Presses arrive faster than the
+   * bridge below can carry them, so they *accumulate*: each one moves the target, and
+   * one write at a time goes out carrying wherever the target has got to. Three quick
+   * presses become one write of −30 rather than three writes that each read the same
+   * stale value from the set and land on −10.
+   */
+  async stepBacklight(steps: number): Promise<void> {
+    if (!this.available) throw new Error('TV is not reachable');
+
+    // The pending target first: while a write is in flight the set still reports the
+    // old value, and basing a second press on that is exactly how presses got lost.
+    const base = this.#backlightTarget ?? this.backlight ?? (await this.readBacklight());
+    if (base === null) throw new Error('TV would not report its picture settings');
+
+    const target = Math.round(Math.min(100, Math.max(0, base + steps)));
+    this.#backlightTarget = target;
+    // Show the intent at once; the set is asked for the truth further down.
+    this.backlight = target;
+    this.emit('changed');
+
+    // A write is already draining the target, and will pick this up when it loops.
+    if (this.#writingBacklight) return;
+
+    this.#writingBacklight = true;
+    try {
+      while (this.#backlightTarget !== null) {
+        const value = this.#backlightTarget;
+        this.#backlightTarget = null;
+        await this.#writeBacklight(value);
+      }
+
+      /*
+       * Only now ask the set what it actually holds, and only once the presses have
+       * stopped. The set applies the change a beat after the alert closes, so a read
+       * taken straight afterwards returns the *old* value — which then went out on the
+       * stream and yanked the number on screen back. That was a real bug.
+       */
+      await new Promise((resolve) => setTimeout(resolve, BACKLIGHT_CONFIRM_MS));
+      if (this.#backlightTarget === null) {
+        await this.readBacklight();
+        this.emit('changed');
+      }
+    } finally {
+      this.#writingBacklight = false;
+    }
+  }
+
+  /**
+   * One write, which the set will not simply let us do.
    *
    * `ssap://settings/setSystemSettings` answers `401` even with `WRITE_SETTINGS`
    * granted: picture writes are reserved for the TV's own apps. What does work — probed
@@ -167,17 +220,14 @@ export class WebosTv extends EventEmitter {
    * it is closed immediately, so nothing readable appears on screen.
    *
    * This is a hack on a private interface, and LG can take it away in a firmware update.
-   * If they do, the failure is this method throwing, not the app misbehaving — and the
-   * d-pad remains a way to reach the same setting the long way round.
+   * If they do, the failure is this throwing, not the app misbehaving — and the d-pad
+   * remains a way to reach the same setting the long way round.
    */
-  async setBacklight(value: number): Promise<void> {
-    if (!this.available) throw new Error('TV is not reachable');
-    const target = Math.round(Math.min(100, Math.max(0, value)));
-
+  async #writeBacklight(value: number): Promise<void> {
     const uri = 'luna://com.webos.settingsservice/setSystemSettings';
     // Strings: the settings service takes the value as text even though it reads back
     // as a number.
-    const params = { category: 'picture', settings: { backlight: String(target) } };
+    const params = { category: 'picture', settings: { backlight: String(value) } };
 
     const alert = await this.#request('ssap://system.notifications/createAlert', {
       message: ' ',
@@ -190,10 +240,6 @@ export class WebosTv extends EventEmitter {
       throw new Error('TV would not take the picture setting');
     }
     await this.#request('ssap://system.notifications/closeAlert', { alertId });
-
-    // The set is the authority: read back rather than trusting the write landed.
-    await this.readBacklight();
-    this.emit('changed');
   }
 
   #connect(): void {
@@ -219,6 +265,7 @@ export class WebosTv extends EventEmitter {
       this.available = false;
       this.current = null;
       this.backlight = null;
+      this.#backlightTarget = null;
       this.#pending.clear();
       // Its address was only valid for this session.
       void this.#input?.then((input) => input.close()).catch(() => {});
@@ -302,3 +349,9 @@ const RETRY_MS = 10_000;
 
 /** Minimum spacing between two key presses on the input socket. See `sendKey`. */
 const KEY_GAP_MS = 60;
+
+/**
+ * How long to leave the set alone before asking what brightness it ended up on. The
+ * change lands a moment after the alert closes; reading sooner returns the old value.
+ */
+const BACKLIGHT_CONFIRM_MS = 700;

@@ -51,13 +51,17 @@ export class FakeTv extends WebosTv {
   }
 
   /*
-   * The real thing cannot be written to directly at all — the value goes through an
-   * alert carrying a luna:// action. None of that is what a UI test is proving, so the
-   * fake records the number and moves on.
+   * The real thing cannot be written to at all directly — the value goes through an
+   * alert carrying a luna:// action, and the set takes a moment to apply it. None of
+   * that is what a UI test proves, so this records where each press landed and moves on.
+   * The coalescing that matters is the real class's, and this deliberately does not
+   * reproduce it: a test asserting on `backlights` is asserting on what the app asked
+   * for.
    */
-  override async setBacklight(value: number): Promise<void> {
+  override async stepBacklight(steps: number): Promise<void> {
     if (!this.available) throw new Error('TV is not reachable');
-    this.backlight = Math.round(Math.min(100, Math.max(0, value)));
+    const base = this.backlight ?? 100;
+    this.backlight = Math.round(Math.min(100, Math.max(0, base + steps)));
     this.backlights.push(this.backlight);
     this.emit('changed');
   }

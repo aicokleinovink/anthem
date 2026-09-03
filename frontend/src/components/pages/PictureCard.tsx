@@ -2,7 +2,7 @@ import { Card } from '../shared/Card';
 import { StepButton } from '../shared/StepButton';
 import { VolumeDial } from '../shared/VolumeDial';
 import { useRipples } from '../../hooks/useRipples';
-import type { TvController } from '../../hooks/useTvTargets';
+import type { BacklightController } from '../../hooks/useBacklight';
 import styles from './PictureCard.module.css';
 
 /**
@@ -14,7 +14,7 @@ const STEP = 10;
 
 interface PictureCardProps {
   /** Owned by the app, not by this card — see InputsCard. */
-  controller: TvController;
+  controller: BacklightController;
   offline: boolean;
 }
 
@@ -25,12 +25,12 @@ interface PictureCardProps {
  * the set and it gets changed daily. The value is a real percentage — 0-100 is the
  * scale the TV itself uses — so the dial reads it straight, with no conversion.
  *
- * The set is the authority. A press sends a *step* rather than a level, and the API
- * reads the current value before writing, so a change made with the TV's own remote is
- * never overwritten by a stale number from here.
+ * The set is the authority. A press sends a *step* rather than a level, and presses
+ * coalesce on the way out — see `useBacklight`, which exists because the shared
+ * optimistic write drops anything sent while a write is already in flight.
  */
 export function PictureCard({ controller, offline }: PictureCardProps) {
-  const { available, backlight, stepBacklight } = controller;
+  const { available, value: backlight, step } = controller;
   const { ripples, spawn } = useRipples();
 
   const ready = backlight !== null;
@@ -38,7 +38,7 @@ export function PictureCard({ controller, offline }: PictureCardProps) {
 
   const press = (steps: number) => {
     spawn(steps > 0 ? 'up' : 'down');
-    stepBacklight(steps);
+    step(steps);
   };
 
   return (

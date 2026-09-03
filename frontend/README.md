@@ -336,6 +336,13 @@ it is buried several menus deep on the TV and gets changed daily, which is the w
 reason it has a card. The scale is the TV's own 0-100, so the dial reads it straight with
 no conversion, and the buttons move it by ten.
 
+It has **its own write queue** (`useBacklight`), and that is not decoration: the shared
+optimistic write in `useReceiver` drops a second write while one is in flight — right for
+a setting you change once, wrong for a button pressed four times in a row. Without it
+every press after the first moved the number and never left the browser, and the next
+snapshot pulled the display back. Presses now accumulate and go out as one `{ steps: N }`,
+the same way volume does.
+
 Two of its states look alike and are not: **Off** is a set that cannot be reached, while
 **Unavailable** is a set that is on but whose client key predates the settings
 permissions. The dial shows `––` rather than a number in both — it never invents one —
@@ -508,6 +515,7 @@ src/hooks/useVolume.ts         volume level and press coalescing
 src/hooks/useInputs.ts         the receiver's sources, and switching between them
 src/hooks/useProfiles.ts       speaker profiles, minus the unnamed factory slots
 src/hooks/useTvTargets.ts      the TV's own sources
+src/hooks/useBacklight.ts      the TV's OLED pixel brightness, and press coalescing
 src/hooks/useDisplay.ts        front panel displayed info
 src/hooks/useSound.ts          bass, treble and subwoofer trim, and drag coalescing
 src/hooks/usePlayerMorph.ts    the player's geometry between the strip and the card slot

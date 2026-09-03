@@ -65,4 +65,39 @@ test.describe('picture', () => {
     await expect(page.getByRole('button', { name: 'Brighter' })).toBeDisabled();
     await expect(page.getByRole('button', { name: 'Dimmer' })).toBeDisabled();
   });
+
+  /*
+   * Pressing faster than the wire can carry it.
+   *
+   * This is the bug this test exists for: the card used the shared optimistic write,
+   * which drops a second write while one is in flight, so presses two, three and four
+   * moved the number on screen and never left the browser — and the next snapshot
+   * yanked the display back to where the set actually was. Brightness now has its own
+   * queue, and the steps that pile up go out together.
+   */
+  test('loses no presses when they come faster than the wire', async ({ page, control }) => {
+    await open(page);
+    await picture(page);
+    await expect(page.getByText('100', { exact: true })).toBeVisible();
+
+    const dimmer = page.getByRole('button', { name: 'Dimmer' });
+    // No awaits between them: four presses inside the time one request takes.
+    await Promise.all([dimmer.click(), dimmer.click(), dimmer.click(), dimmer.click()]);
+
+    // Forty points of dimming, however many requests it took to carry them. The card
+    // and the set must agree at the end — the old bug ended at 90 with the card
+    // showing 60 for a moment first.
+    await expect(page.getByText('60', { exact: true })).toBeVisible();
+    await expect
+      .poll(async () => {
+        const written = await control.tvBacklights();
+        return written.at(-1);
+      })
+      .toBe(60);
+
+    // And back up again, to leave the fake where the other tests expect it.
+    const brighter = page.getByRole('button', { name: 'Brighter' });
+    await Promise.all([brighter.click(), brighter.click(), brighter.click(), brighter.click()]);
+    await expect(page.getByText('100', { exact: true })).toBeVisible();
+  });
 });

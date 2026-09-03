@@ -18,6 +18,7 @@ import {
   type Device,
   type Section,
 } from './components/shared/Toolbar';
+import { useBacklight } from './hooks/useBacklight';
 import { useDisplay } from './hooks/useDisplay';
 import { useInputs } from './hooks/useInputs';
 import { usePlayerMorph } from './hooks/usePlayerMorph';
@@ -54,6 +55,7 @@ export default function App() {
   const inputs = useInputs(receiver);
   const profiles = useProfiles(receiver);
   const tv = useTvTargets(receiver);
+  const backlight = useBacklight(receiver);
   const display = useDisplay(receiver);
   const sound = useSound(receiver);
   const { snapshot, offline, write } = receiver;
@@ -159,7 +161,7 @@ export default function App() {
             <RemoteCard key="tv-remote" controller={tv} offline={offline} />
           )}
           {device === 'tv' && section === 'picture' && (
-            <PictureCard key="tv-picture" controller={tv} offline={offline} />
+            <PictureCard key="tv-picture" controller={backlight} offline={offline} />
           )}
           {device === 'anthem' && section === 'volume' && (
             <VolumeCard key="volume" controller={volume} powerOn={power} offline={offline} />

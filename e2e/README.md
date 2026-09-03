@@ -88,6 +88,8 @@ Three more that are worth knowing the shape of:
   and that every key locks when the set is unreachable.
 - **`picture.spec.ts`** — the TV's brightness: a press is a *step*, the card shows what
   the set reported, and it shows `––` rather than a number when the set reports nothing.
+  One test presses four times inside the time a single request takes, which is how the
+  dropped-press bug was caught: against the old code it ends on 90 instead of 60.
   Watch the fakes here: a test that switches the TV off used to leave every later test
   looking at a card with no value, which `--repeat-each` found.
 - **`layout.spec.ts`** — geometry at 375pt, the width the app is actually used at. It

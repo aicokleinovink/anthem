@@ -41,17 +41,15 @@ export function tvRoutes(tv: WebosTv): Router {
   });
 
   /*
-   * Brightness moves in steps because the TV is the authority on where it currently is:
-   * reading, adding and writing here keeps the app from ever fighting a change made with
-   * the set's own remote.
+   * Brightness moves in steps because the TV is the authority on where it currently is.
+   * The client owns none of the arithmetic: `stepBacklight` accumulates presses against
+   * the pending target and writes one at a time, so pressing faster than the set can
+   * keep up loses nothing.
    */
   router.post('/tv/backlight', async (req, res, next) => {
     try {
       const { steps } = parseBody(backlightBody, req.body);
-      const current = await tv.readBacklight();
-      if (current === null) throw new Error('TV would not report its picture settings');
-      const target = Math.min(100, Math.max(0, current + steps));
-      if (target !== current) await tv.setBacklight(target);
+      await tv.stepBacklight(steps);
       res.json({ backlight: tv.backlight });
     } catch (error) {
       next(error);
