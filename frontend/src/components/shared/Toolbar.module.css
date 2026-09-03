@@ -10,6 +10,8 @@
   gap: 8px;
   padding: 7px;
   border-radius: 26px;
+  /* So the flex row can shrink its tabs rather than growing past its parent. */
+  min-width: 0;
   background: var(--glass-regular);
   backdrop-filter: var(--blur-regular);
   -webkit-backdrop-filter: var(--blur-regular);
@@ -20,6 +22,20 @@
   position: relative;
   display: flex;
   gap: 2px;
+  /*
+   * The tabs are the widest thing in the chrome, so they are what has to give when the
+   * text renders wider than the space: shrink, then scroll within the bar. With the
+   * system stack this never triggers — four tabs and the power button fit a 375pt phone
+   * with room to spare — but it is what keeps a wider font from pushing the whole shell
+   * off the side of the screen.
+   */
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
 }
 
 /* The selected pill is one element that slides between tabs rather than a background

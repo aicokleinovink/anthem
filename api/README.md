@@ -131,6 +131,105 @@ TV even when you change it with its own remote.
 talk to; that needs Wake-on-LAN and *Mobile TV On* enabled on the set. Until then the card
 shows "Off" and disables itself.
 
+### Remote keys travel on a second socket
+
+Directional keys are **not part of SSAP's request surface**. The set hands out a separate
+WebSocket for them, and only per session:
+
+```
+ssap://com.webos.service.networkinput/getPointerInputSocket
+  -> payload.socketPath = ws://<host>:3000/resources/<hash>/netinput.pointer.sock
+```
+
+That socket takes newline-delimited text rather than JSON, and the trailing blank line is
+required:
+
+```
+type:button\nname:UP\n\n
+```
+
+`src/tv/keys.ts` holds the app's names and LG's spelling of them; nothing outside it knows
+the wire names, the same way nothing outside `protocol/` knows `Z1PVOL`. The socket is
+opened on the first press and dropped with the connection, because the address does not
+outlive the session.
+
+**This needs `CONTROL_MOUSE_AND_KEYBOARD` in the manifest, and therefore a re-pair.** The
+permissions a client key carries are fixed when the key is paired, so a key from before
+that permission was added gets `401 insufficient permissions` for the request above while
+every other request on the same key keeps working — which reads like a broken request
+rather than a stale key. `src/tv/manifest.ts` is the single copy of the manifest for
+exactly this reason: `pair-tv` and the running app must present the same list. Old and new
+keys coexist on the set, so re-pairing does not disturb anything else.
+
+### OLED pixel brightness, and the alert bridge
+
+`picture.backlight` is the setting the TV's own menus call OLED Pixel Brightness, 0-100.
+**Reading it is ordinary; writing it is not.**
+
+```
+settings/getSystemSettings {category:'picture', keys:['backlight']}   -> {"backlight":100}
+settings/setSystemSettings {category:'picture', settings:{...}}       -> 401, even with
+                                                                         WRITE_SETTINGS
+```
+
+Picture writes are reserved for the set's own apps. What does work — probed on the real
+set, 100 → 90 → 100 — is to have the TV make the change *itself*: `createAlert` carries a
+`luna://com.webos.settingsservice/setSystemSettings` action, and `closeAlert` fires it, so
+the call runs with the TV's own authority. The alert's message is a single space and it is
+closed immediately, so nothing readable reaches the screen.
+
+That is a hack on a private interface and LG can remove it in a firmware update. When
+they do, `setBacklight` throws and the card stops working; nothing else breaks, and the
+d-pad still reaches the same setting the long way round.
+
+Two more things about this corner:
+
+- **`keys` must contain only keys the category has.** One wrong name fails the whole
+  request with `500 Application error`, which reads as a broken service rather than as a
+  typo. That cost a detour.
+- **There is no subscription for it.** The value is read on connect and again after each
+  write, so a change made with the set's own remote is not noticed until then. Brightness
+  moves as a *step*, never as a level, so the app can never overwrite the set with a
+  stale number.
+- **The set applies the change a beat after the alert closes.** A read taken straight
+  afterwards returns the *old* value — which then goes out on the stream and yanks the
+  number on screen back to where it was. `stepBacklight` waits before confirming, and
+  only once the presses have stopped.
+- **Presses have to accumulate, not queue.** They arrive faster than the bridge carries
+  them, and two writes that each read the set's current value both compute the same
+  target: three quick presses land as one step of ten. So the pending *target* is what a
+  press is added to, one write at a time drains it, and pressing faster than the set can
+  keep up loses nothing. Same shape as the receiver's volume coalescing, for the same
+  reason.
+- **The settling wait needs the drain loop wrapped around it, not after it.** A press
+  that lands *during* the wait finds a write already in progress and returns without
+  writing — so if the loop had already ended, that target was never sent and every
+  client was left showing a value the set did not have. Drain, settle, and go round
+  again if anything arrived while settling.
+- **A refused write must put the value back.** The target is published before it is
+  written, so when the bridge fails the API asks the set what it actually holds rather
+  than leaving clients on a write that never landed. If even the read fails it reports
+  nothing, which the card draws as `––`.
+
+Two findings from the real set worth not re-learning:
+
+- **The settings menu is an overlay, not an app.** `menu` opens it and `back` closes it,
+  but `getForegroundAppInfo` keeps reporting whatever app is behind it. Nothing can detect
+  that the menu is open. There is no settings launch point either — `listLaunchPoints`
+  returns 18 apps and none of them is one — so `menu` is the only route to it.
+- **Keys are context-dependent.** In a video player the arrows seek instead of moving a
+  highlight, so probing the d-pad while something is playing scrubs the picture and
+  measures nothing. Probe from the home screen.
+
+**The set does not drop keys sent back-to-back, and that is measured.** The receiver
+does, so these were paced 60 ms apart on the assumption that the TV would behave the
+same; it does not. Five frames written to the input socket inside 1 ms all landed —
+counted a tile at a time on the home screen, which is where a press moves a highlight
+one step and a human can see what arrived. The pacing is gone.
+
+Measure again before adding a press-and-hold repeat: that sends far more than five, and
+nothing here says where the limit is — only that it is above five in a millisecond.
+
 ## Now playing
 
 The receiver has no idea what is playing — audio just arrives on an input — so the track,

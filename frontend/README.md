@@ -7,8 +7,8 @@ labels on glass.
 
 Two rows of chrome sit above the card. A **device switcher** — TV · Anthem — chooses
 whose controls you are looking at, and the **section toolbar** below it swaps the card:
-**Inputs** for the TV, **Volume**, **Sound**, **Inputs** and **Settings** for the
-receiver. The
+**Inputs** and **Remote** for the TV, **Volume**, **Sound**, **Inputs** and **Settings**
+for the receiver. The
 **power button** on the right of the toolbar turns the receiver on and off.
 
 Vite + React + TypeScript. It talks to the Express API in `../api`, which owns the TCP
@@ -312,6 +312,48 @@ remote, and shows nothing when it is on something outside this list.
 With the TV off the card says "Off" and disables, because a set that is off cannot be woken
 over the network.
 
+`Remote` is the set's own keys: a row of round action buttons — the cog opens the TV's
+settings menu — and a d-pad below it, arrows on the cross with OK in the middle and Back
+underneath. The row is a **four-column grid holding one button**, so the three that come
+later appear beside the cog instead of shifting it.
+
+Two things make this card unlike every other one, and both are worth keeping in mind
+before adding to it:
+
+- **A press is an event, not a setting.** Nothing is written optimistically, nothing
+  comes back on the stream, and no key has a selected state. The card's status line says
+  only whether the set is reachable.
+- **The TV cannot report what its menu is doing.** The settings menu is an overlay rather
+  than an app, so the set keeps naming whatever is behind it as the foreground — verified
+  against the real one. Nothing here may show the menu as open, because nothing can know.
+
+The keys need a client key paired with `CONTROL_MOUSE_AND_KEYBOARD` in the manifest; an
+install that has not re-paired since gets a failing press rather than a broken card. See
+[api/README.md](../api/README.md) for that and for the socket the keys travel on.
+
+`Picture` is the set's OLED pixel brightness, on the same dial the volume card uses —
+it is buried several menus deep on the TV and gets changed daily, which is the whole
+reason it has a card. The scale is the TV's own 0-100, so the dial reads it straight with
+no conversion, and the buttons move it by ten.
+
+It has **its own write queue** (`useBacklight`), and that is not decoration: the shared
+optimistic write in `useReceiver` drops a second write while one is in flight — right for
+a setting you change once, wrong for a button pressed four times in a row. Without it
+every press after the first moved the number and never left the browser, and the next
+snapshot pulled the display back. Presses now accumulate and go out as one `{ steps: N }`,
+the same way volume does.
+
+A failure here is **not** the app being offline, and the difference is load-bearing: an
+`ApiError` carries a status, which proves the API answered and the *set* refused — the
+normal state of an install that has not re-paired. Reporting that through the shared
+offline flag disabled the volume dial, the power button and every other card over a TV
+setting, so only a rejected fetch with no answer at all counts as offline.
+
+Two of its states look alike and are not: **Off** is a set that cannot be reached, while
+**Unavailable** is a set that is on but whose client key predates the settings
+permissions. The dial shows `––` rather than a number in both — it never invents one —
+and re-pairing is what fixes the second.
+
 ## Settings
 
 Two settings, each in its own thin-outlined panel so they read as separate things rather
@@ -479,11 +521,12 @@ src/hooks/useVolume.ts         volume level and press coalescing
 src/hooks/useInputs.ts         the receiver's sources, and switching between them
 src/hooks/useProfiles.ts       speaker profiles, minus the unnamed factory slots
 src/hooks/useTvTargets.ts      the TV's own sources
+src/hooks/useBacklight.ts      the TV's OLED pixel brightness, and press coalescing
 src/hooks/useDisplay.ts        front panel displayed info
 src/hooks/useSound.ts          bass, treble and subwoofer trim, and drag coalescing
 src/hooks/usePlayerMorph.ts    the player's geometry between the strip and the card slot
 src/components/shared/         Card, Panel, Toolbar, DeviceSwitcher, PowerButton, PillList, …
-src/components/pages/          one card per device section
+src/components/pages/          one card per device section, RemoteCard included
 src/styles/global.css          tokens, reset, shared keyframes
 public/                        icons and the web manifest, copied to the root of dist/
 scripts/render-icons.py        rasterises the PNG icons from public/icon.svg

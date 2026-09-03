@@ -56,11 +56,13 @@ export function VolumeCard({ controller, powerOn, offline }: VolumeCardProps) {
       <div className={styles.controls}>
         <StepButton
           direction="down"
+          label="Volume down"
           disabled={locked || displayDb === null || displayDb <= MIN_DB}
           onPress={() => press(-1)}
         />
         <StepButton
           direction="up"
+          label="Volume up"
           disabled={locked || displayDb === null || displayDb >= ceilingDb}
           onPress={() => press(1)}
         />

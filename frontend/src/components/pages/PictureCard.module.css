@@ -1,0 +1,8 @@
+/* The same row the volume card gives its steps, for the same reason: two round buttons
+   under a dial, centred, with room enough between them for a thumb. */
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 12px;
+}

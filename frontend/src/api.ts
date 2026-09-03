@@ -30,6 +30,8 @@ export interface Snapshot {
     available: boolean;
     current: string | null;
     targets: Array<{ key: string; label: string }>;
+    /** OLED pixel brightness, 0-100, or null when the set has not reported one. */
+    backlight: number | null;
   };
 }
 
@@ -62,7 +64,12 @@ export const MAX_DB = 10;
 /** Where the state comes from: one stream, pushed by the receiver itself. */
 export const EVENTS_URL = '/api/events';
 
-class ApiError extends Error {
+/**
+ * The API answered, and said no. Exported because that is a meaningful distinction for
+ * a caller: an `ApiError` proves the app can reach the API, so a device refusing a
+ * write is not the same event as the app being offline.
+ */
+export class ApiError extends Error {
   constructor(
     message: string,
     readonly status: number,
@@ -103,6 +110,36 @@ export const setDisplay = (info: number) => write('/api/display', { info });
 export const setSound = (control: ToneControl, db: number) => write('/api/sound', { [control]: db });
 
 export const selectTvTarget = (target: string) => write('/api/tv', { target });
+
+/** The remote keys the TV accepts. Mirrors the API's own list. */
+export type TvKeyName = 'up' | 'down' | 'left' | 'right' | 'enter' | 'back' | 'menu';
+
+/**
+ * A press, not a state: nothing to read back, so nothing is written optimistically and
+ * the snapshot does not change. The TV either takes it or the request fails.
+ */
+export const sendTvKey = (key: TvKeyName) =>
+  fetch('/api/tv/key', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ key }),
+  }).then((response) => {
+    if (!response.ok) throw new ApiError(response.statusText, response.status);
+  });
+
+/**
+ * Brightness moves in steps, never as a level: the TV owns the value, and the API reads
+ * it before writing so a change made with the set's own remote is never overwritten by
+ * a stale number from here.
+ */
+export const stepTvBacklight = (steps: number) =>
+  fetch('/api/tv/backlight', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ steps }),
+  }).then((response) => {
+    if (!response.ok) throw new ApiError(response.statusText, response.status);
+  });
 
 const player = (body: unknown) =>
   fetch('/api/player', {

@@ -32,7 +32,12 @@ export function eventRoutes(receiver: Receiver, player: Player, tv: WebosTv): Ro
     res.flushHeaders();
 
     const send = () => {
-      const state = { available: tv.available, current: tv.current, targets: tv.targets };
+      const state = {
+        available: tv.available,
+        current: tv.current,
+        targets: tv.targets,
+        backlight: tv.backlight,
+      };
       res.write(`data: ${JSON.stringify(snapshot(receiver.state, player.now, state))}\n\n`);
     };
 

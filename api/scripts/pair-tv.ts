@@ -9,6 +9,7 @@
  *   npm run pair-tv -- 192.168.2.6  # or name the set explicitly
  */
 import { config } from '../src/config.js';
+import { TV_MANIFEST } from '../src/tv/manifest.js';
 
 const host = process.argv[2] ?? config.tvHost;
 
@@ -17,29 +18,6 @@ if (!host) {
   process.exit(1);
 }
 
-const MANIFEST = {
-  manifestVersion: 1,
-  appVersion: '1.1',
-  signed: {
-    created: '20140509',
-    appId: 'com.anthem.remote',
-    vendorId: 'com.anthem',
-    localizedAppNames: { '': 'Anthem Remote' },
-    localizedVendorNames: { '': 'Anthem Remote' },
-    permissions: ['TEST_SECURE'],
-    serial: '2f930e2d2cfe083771f68e4fe7bb07',
-  },
-  permissions: [
-    'LAUNCH',
-    'CONTROL_AUDIO',
-    'CONTROL_POWER',
-    'READ_INSTALLED_APPS',
-    'READ_RUNNING_APPS',
-    'CONTROL_INPUT_TV',
-    'READ_INPUT_DEVICE_LIST',
-    'WRITE_NOTIFICATION_TOAST',
-  ],
-};
 
 console.log(`connecting to ${host} — accept the prompt on the TV`);
 
@@ -50,7 +28,7 @@ socket.onopen = () => {
     JSON.stringify({
       type: 'register',
       id: 'register',
-      payload: { forcePairing: false, pairingType: 'PROMPT', manifest: MANIFEST },
+      payload: { forcePairing: false, pairingType: 'PROMPT', manifest: TV_MANIFEST },
     }),
   );
 };

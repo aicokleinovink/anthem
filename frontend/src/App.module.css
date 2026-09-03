@@ -1,5 +1,13 @@
 .screen {
   display: grid;
+  /*
+   * An explicit `minmax(0, 1fr)` rather than the implicit `auto` column. `auto` is sized
+   * by its content, so the shell's own `width: min(390px, 100%)` never bound: the `100%`
+   * resolved to whatever the toolbar demanded, and on a font wider than SF Pro — CI's
+   * Linux stack, for one — the whole shell grew past the viewport and the page scrolled
+   * sideways. Found by the 375pt layout test failing on CI and not on a Mac.
+   */
+  grid-template-columns: minmax(0, 1fr);
   place-items: center;
   min-height: 100%;
   /* Narrower at the sides than top and bottom: four tabs need the width, and on a phone

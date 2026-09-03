@@ -83,6 +83,7 @@ UI is an echo of what was requested.
 ```bash
 cd api && npm test                        # protocol parsing, commands, state cache, transport
 cd e2e && npm install && npm run e2e      # the real UI, end to end, against fake devices
+cd e2e && npm run e2e:ui                  # the same suite in Playwright's UI mode
 ```
 
 Both run without hardware. The end-to-end suite is Playwright driving the built app while
