@@ -6,7 +6,7 @@ export const DEVICES = ['tv', 'anthem'] as const;
 
 export type Device = (typeof DEVICES)[number];
 
-const ALL_SECTIONS = ['volume', 'sound', 'inputs', 'settings'] as const;
+const ALL_SECTIONS = ['volume', 'sound', 'inputs', 'remote', 'settings'] as const;
 
 export type Section = (typeof ALL_SECTIONS)[number];
 
@@ -15,7 +15,7 @@ export type Section = (typeof ALL_SECTIONS)[number];
  * that device's own sources — the TV's watch targets, or the receiver's inputs.
  */
 export const SECTIONS: Record<Device, readonly [Section, ...Section[]]> = {
-  tv: ['inputs'],
+  tv: ['inputs', 'remote'],
   anthem: ['volume', 'sound', 'inputs', 'settings'],
 };
 
@@ -31,6 +31,7 @@ const LABELS: Record<Section, string> = {
   volume: 'Volume',
   sound: 'Sound',
   inputs: 'Inputs',
+  remote: 'Remote',
   settings: 'Settings',
 };
 

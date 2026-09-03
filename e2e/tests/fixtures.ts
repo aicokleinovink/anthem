@@ -14,6 +14,8 @@ export interface Control {
   tvSelections: () => Promise<string[]>;
   /** Transport actions the streamer was asked to perform. */
   playerActions: () => Promise<string[]>;
+  /** Remote keys the TV was sent, e.g. `menu`, in order. */
+  tvKeys: () => Promise<string[]>;
   /** The state the fake receiver holds — what a write actually landed on. */
   receiverState: () => Promise<Record<string, unknown>>;
   /** Broadcast frames from the receiver, without their terminators: `push('Z1POW1')`. */
@@ -31,6 +33,7 @@ function control(api: APIRequestContext): Control {
     wire: async () => (await (await api.get('/log')).json()).receiver,
     tvSelections: async () => (await (await api.get('/log')).json()).tv,
     playerActions: async () => (await (await api.get('/log')).json()).player,
+    tvKeys: async () => (await (await api.get('/log')).json()).tvKeys,
     receiverState: async () => (await api.get('/receiver')).json(),
     push: async (...frames) => {
       await api.post('/push', { data: { frames } });

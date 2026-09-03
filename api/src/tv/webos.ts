@@ -1,5 +1,7 @@
 import { EventEmitter } from 'node:events';
 import { config } from '../config.js';
+import { TV_KEYS, type TvKey } from './keys.js';
+import { TV_MANIFEST } from './manifest.js';
 import { TV_TARGETS, type TvTarget } from './targets.js';
 
 /**
@@ -20,6 +22,10 @@ export class WebosTv extends EventEmitter {
   #pending = new Map<string, (payload: Record<string, unknown>) => void>();
   #retry?: NodeJS.Timeout;
   #stopped = false;
+  /** The second socket the remote keys go to; opened on the first press. */
+  #input?: Promise<WebSocket>;
+  /** When the last key went out, so presses can be paced rather than dumped. */
+  #lastKeyAt = 0;
 
   constructor(
     private readonly host = config.tvHost,
@@ -62,6 +68,73 @@ export class WebosTv extends EventEmitter {
     );
   }
 
+  /**
+   * Press a key, as the physical remote would.
+   *
+   * Directional keys are not part of SSAP's request surface: the set hands out a
+   * separate WebSocket for them, whose address it only gives out per session — so the
+   * socket is opened on the first press and thrown away with the connection.
+   */
+  async sendKey(key: TvKey): Promise<void> {
+    if (!this.available) throw new Error('TV is not reachable');
+
+    const socket = await this.#inputSocket();
+
+    /*
+     * Paced, like the receiver's writes. Whether this set drops keys sent back-to-back
+     * is not established — the probe that was meant to answer it ran inside a video
+     * player, where the d-pad seeks instead of moving a highlight, so nothing was
+     * countable. A held-down arrow is the case that would expose it. The gap is cheap
+     * insurance until somebody counts tiles on the home screen; if it turns out to be
+     * unnecessary, deleting it is a one-line change.
+     */
+    const gap = KEY_GAP_MS - (Date.now() - this.#lastKeyAt);
+    if (gap > 0) await new Promise((resolve) => setTimeout(resolve, gap));
+    this.#lastKeyAt = Date.now();
+
+    // Newline-delimited text, not JSON, and the blank line at the end is required.
+    socket.send(`type:button\nname:${TV_KEYS[key]}\n\n`);
+  }
+
+  /** The input socket, opened once per connection and shared by every press. */
+  #inputSocket(): Promise<WebSocket> {
+    if (this.#input) return this.#input;
+
+    this.#input = (async () => {
+      const answer = await this.#request(
+        'ssap://com.webos.service.networkinput/getPointerInputSocket',
+        {},
+      );
+      const path = answer.socketPath;
+      if (typeof path !== 'string') {
+        /*
+         * What a key paired before `CONTROL_MOUSE_AND_KEYBOARD` was in the manifest
+         * gets: `401 insufficient permissions`. Say so plainly — the fix is a re-pair,
+         * not a code change, and the error surfaces in the UI.
+         */
+        throw new Error('TV would not give out an input socket — re-pair with `npm run pair-tv`');
+      }
+
+      const socket = new WebSocket(path);
+      await new Promise<void>((resolve, reject) => {
+        socket.onopen = () => resolve();
+        socket.onerror = () => reject(new Error('TV input socket would not open'));
+      });
+      // A dead input socket must not be handed to the next press.
+      socket.onclose = () => {
+        if (this.#input === promise) this.#input = undefined;
+      };
+      return socket;
+    })();
+
+    const promise = this.#input;
+    // A failed attempt is not cached; the next press tries again.
+    promise.catch(() => {
+      if (this.#input === promise) this.#input = undefined;
+    });
+    return promise;
+  }
+
   #connect(): void {
     const socket = new WebSocket(`ws://${this.host}:3000`);
     this.#socket = socket;
@@ -70,7 +143,7 @@ export class WebosTv extends EventEmitter {
       const payload: Record<string, unknown> = {
         forcePairing: false,
         pairingType: 'PROMPT',
-        manifest: MANIFEST,
+        manifest: TV_MANIFEST,
       };
       payload['client-key'] = this.clientKey;
       socket.send(JSON.stringify({ type: 'register', id: 'register', payload }));
@@ -85,6 +158,9 @@ export class WebosTv extends EventEmitter {
       this.available = false;
       this.current = null;
       this.#pending.clear();
+      // Its address was only valid for this session.
+      void this.#input?.then((input) => input.close()).catch(() => {});
+      this.#input = undefined;
       if (was) this.emit('changed');
       if (!this.#stopped) this.#retry = setTimeout(() => this.#connect(), RETRY_MS);
     };
@@ -151,30 +227,5 @@ export class WebosTv extends EventEmitter {
 
 const RETRY_MS = 10_000;
 
-/**
- * The registration manifest. LG's own app sends a signed one; a plain manifest is
- * enough for prompt-based pairing, which is why this needs no extra dependency.
- */
-const MANIFEST = {
-  manifestVersion: 1,
-  appVersion: '1.1',
-  signed: {
-    created: '20140509',
-    appId: 'com.anthem.remote',
-    vendorId: 'com.anthem',
-    localizedAppNames: { '': 'Anthem Remote' },
-    localizedVendorNames: { '': 'Anthem Remote' },
-    permissions: ['TEST_SECURE'],
-    serial: '2f930e2d2cfe083771f68e4fe7bb07',
-  },
-  permissions: [
-    'LAUNCH',
-    'CONTROL_AUDIO',
-    'CONTROL_POWER',
-    'READ_INSTALLED_APPS',
-    'READ_RUNNING_APPS',
-    'CONTROL_INPUT_TV',
-    'READ_INPUT_DEVICE_LIST',
-    'WRITE_NOTIFICATION_TOAST',
-  ],
-};
+/** Minimum spacing between two key presses on the input socket. See `sendKey`. */
+const KEY_GAP_MS = 60;

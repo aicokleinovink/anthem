@@ -131,6 +131,50 @@ TV even when you change it with its own remote.
 talk to; that needs Wake-on-LAN and *Mobile TV On* enabled on the set. Until then the card
 shows "Off" and disables itself.
 
+### Remote keys travel on a second socket
+
+Directional keys are **not part of SSAP's request surface**. The set hands out a separate
+WebSocket for them, and only per session:
+
+```
+ssap://com.webos.service.networkinput/getPointerInputSocket
+  -> payload.socketPath = ws://<host>:3000/resources/<hash>/netinput.pointer.sock
+```
+
+That socket takes newline-delimited text rather than JSON, and the trailing blank line is
+required:
+
+```
+type:button\nname:UP\n\n
+```
+
+`src/tv/keys.ts` holds the app's names and LG's spelling of them; nothing outside it knows
+the wire names, the same way nothing outside `protocol/` knows `Z1PVOL`. The socket is
+opened on the first press and dropped with the connection, because the address does not
+outlive the session.
+
+**This needs `CONTROL_MOUSE_AND_KEYBOARD` in the manifest, and therefore a re-pair.** The
+permissions a client key carries are fixed when the key is paired, so a key from before
+that permission was added gets `401 insufficient permissions` for the request above while
+every other request on the same key keeps working — which reads like a broken request
+rather than a stale key. `src/tv/manifest.ts` is the single copy of the manifest for
+exactly this reason: `pair-tv` and the running app must present the same list. Old and new
+keys coexist on the set, so re-pairing does not disturb anything else.
+
+Two findings from the real set worth not re-learning:
+
+- **The settings menu is an overlay, not an app.** `menu` opens it and `back` closes it,
+  but `getForegroundAppInfo` keeps reporting whatever app is behind it. Nothing can detect
+  that the menu is open. There is no settings launch point either — `listLaunchPoints`
+  returns 18 apps and none of them is one — so `menu` is the only route to it.
+- **Keys are context-dependent.** In a video player the arrows seek instead of moving a
+  highlight, so probing the d-pad while something is playing scrubs the picture and
+  measures nothing. Probe from the home screen.
+
+Whether the set drops keys sent back-to-back the way the receiver does is **not
+established**; `sendKey` paces them 60 ms apart as cheap insurance, and the comment there
+says what would settle it.
+
 ## Now playing
 
 The receiver has no idea what is playing — audio just arrives on an input — so the track,

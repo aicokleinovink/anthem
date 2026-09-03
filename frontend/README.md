@@ -7,8 +7,8 @@ labels on glass.
 
 Two rows of chrome sit above the card. A **device switcher** — TV · Anthem — chooses
 whose controls you are looking at, and the **section toolbar** below it swaps the card:
-**Inputs** for the TV, **Volume**, **Sound**, **Inputs** and **Settings** for the
-receiver. The
+**Inputs** and **Remote** for the TV, **Volume**, **Sound**, **Inputs** and **Settings**
+for the receiver. The
 **power button** on the right of the toolbar turns the receiver on and off.
 
 Vite + React + TypeScript. It talks to the Express API in `../api`, which owns the TCP
@@ -312,6 +312,25 @@ remote, and shows nothing when it is on something outside this list.
 With the TV off the card says "Off" and disables, because a set that is off cannot be woken
 over the network.
 
+`Remote` is the set's own keys: a row of round action buttons — the cog opens the TV's
+settings menu — and a d-pad below it, arrows on the cross with OK in the middle and Back
+underneath. The row is a **four-column grid holding one button**, so the three that come
+later appear beside the cog instead of shifting it.
+
+Two things make this card unlike every other one, and both are worth keeping in mind
+before adding to it:
+
+- **A press is an event, not a setting.** Nothing is written optimistically, nothing
+  comes back on the stream, and no key has a selected state. The card's status line says
+  only whether the set is reachable.
+- **The TV cannot report what its menu is doing.** The settings menu is an overlay rather
+  than an app, so the set keeps naming whatever is behind it as the foreground — verified
+  against the real one. Nothing here may show the menu as open, because nothing can know.
+
+The keys need a client key paired with `CONTROL_MOUSE_AND_KEYBOARD` in the manifest; an
+install that has not re-paired since gets a failing press rather than a broken card. See
+[api/README.md](../api/README.md) for that and for the socket the keys travel on.
+
 ## Settings
 
 Two settings, each in its own thin-outlined panel so they read as separate things rather
@@ -483,7 +502,7 @@ src/hooks/useDisplay.ts        front panel displayed info
 src/hooks/useSound.ts          bass, treble and subwoofer trim, and drag coalescing
 src/hooks/usePlayerMorph.ts    the player's geometry between the strip and the card slot
 src/components/shared/         Card, Panel, Toolbar, DeviceSwitcher, PowerButton, PillList, …
-src/components/pages/          one card per device section
+src/components/pages/          one card per device section, RemoteCard included
 src/styles/global.css          tokens, reset, shared keyframes
 public/                        icons and the web manifest, copied to the root of dist/
 scripts/render-icons.py        rasterises the PNG icons from public/icon.svg

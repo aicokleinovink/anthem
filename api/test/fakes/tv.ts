@@ -1,3 +1,4 @@
+import type { TvKey } from '../../src/tv/keys.js';
 import { WebosTv } from '../../src/tv/webos.js';
 
 /**
@@ -8,6 +9,8 @@ import { WebosTv } from '../../src/tv/webos.js';
 export class FakeTv extends WebosTv {
   /** Every target the app asked the TV to switch to, in order. */
   readonly selections: string[] = [];
+  /** Every remote key the app pressed, in order. */
+  readonly keys: TvKey[] = [];
 
   constructor() {
     // No host or client key, so the real WebSocket is never opened.
@@ -28,6 +31,15 @@ export class FakeTv extends WebosTv {
     // The real set reports the change back on its own subscription a moment later.
     this.current = key;
     this.emit('changed');
+  }
+
+  /*
+   * The real thing sends these to a second socket the set hands out per session; there
+   * is nothing to read back either way, so recording the press is the whole of it.
+   */
+  override async sendKey(key: TvKey): Promise<void> {
+    if (!this.available) throw new Error('TV is not reachable');
+    this.keys.push(key);
   }
 
   /** Report the set turning off, or landing on something, without a command. */

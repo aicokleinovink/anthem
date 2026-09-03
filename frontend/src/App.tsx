@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { setPower } from './api';
 import { InputsCard } from './components/pages/InputsCard';
+import { RemoteCard } from './components/pages/RemoteCard';
 import { SettingsCard } from './components/pages/SettingsCard';
 import { SoundCard } from './components/pages/SoundCard';
 import { TvCard } from './components/pages/TvCard';
@@ -152,6 +153,9 @@ export default function App() {
         >
           {device === 'tv' && section === 'inputs' && (
             <TvCard key="tv-inputs" controller={tv} offline={offline} />
+          )}
+          {device === 'tv' && section === 'remote' && (
+            <RemoteCard key="tv-remote" controller={tv} offline={offline} />
           )}
           {device === 'anthem' && section === 'volume' && (
             <VolumeCard key="volume" controller={volume} powerOn={power} offline={offline} />

@@ -83,6 +83,9 @@ Three more that are worth knowing the shape of:
   click is only ever 0 or 1 and one layout is always the only one mounted. A half-finished
   drag is the *sole* state where both are in the DOM, which makes it the only way to test
   what `inert` is for. A click-driven version of that test passes with `inert` deleted.
+- **`remote.spec.ts`** — the TV's remote keys, which are presses rather than settings:
+  the assertion is the order they reached the set in, that the receiver was sent nothing,
+  and that every key locks when the set is unreachable.
 - **`layout.spec.ts`** — geometry at 375pt, the width the app is actually used at. It
   asserts relationships rather than pixel counts: the title column gets exactly the
   remainder after artwork, transport, gap and padding, and a longer title changes neither

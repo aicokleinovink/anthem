@@ -1,0 +1,154 @@
+/*
+ * The TV remote: a row of round action keys, and a d-pad below it.
+ *
+ * Every key is the same glass button as the volume steps — translucent fill, specular
+ * edge, no blur of its own because the card behind it has already blurred the artwork.
+ * Sizes differ between the row and the pad; nothing else does.
+ */
+
+/* Four columns from the start, so the buttons that are not there yet still hold their
+   place and the cog does not move when they arrive. */
+.actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  place-items: center;
+  padding: 4px 0 2px;
+}
+
+.action,
+.padKey,
+.ok,
+.back {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: var(--thumb);
+  box-shadow: var(--edge-soft);
+  color: var(--label);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 140ms var(--spring),
+    background 140ms ease,
+    opacity 160ms ease;
+}
+
+.action {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+}
+
+/* Stroked like every other glyph in the app; the cog is the one filled shape, so it
+   carries its own rule rather than inheriting the stroke. */
+.padKey svg path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.cog {
+  fill: currentColor;
+}
+
+/* Punched out of the cog, so the card's glass shows through the middle of it. */
+.cogHole {
+  fill: var(--glass-thick);
+}
+
+/*
+ * The pad is the shape of the thing it stands for: arrows on the cross, OK in the
+ * middle. Explicit areas rather than source order, so the markup can read top, left,
+ * centre, right, down while the grid stays a cross.
+ */
+.pad {
+  display: grid;
+  grid-template-columns: repeat(3, 62px);
+  grid-template-rows: repeat(3, 62px);
+  gap: 8px;
+  justify-content: center;
+  padding: 6px 0 2px;
+}
+
+.padKey {
+  width: 62px;
+  height: 62px;
+  border-radius: 22px;
+}
+
+.up {
+  grid-area: 1 / 2;
+}
+
+.left {
+  grid-area: 2 / 1;
+}
+
+.centre {
+  grid-area: 2 / 2;
+}
+
+.right {
+  grid-area: 2 / 3;
+}
+
+.down {
+  grid-area: 3 / 2;
+}
+
+/* The one key that says what it is in words: it is the target, and a circle in the
+   middle of the cross reads as the centre of the pad rather than as a fifth arrow. */
+.ok {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.below {
+  display: flex;
+  justify-content: center;
+  padding-top: 12px;
+}
+
+/* Wider than tall, because it is a word rather than a glyph — the same pill shape the
+   input lists use, so it does not read as a sixth pad key. */
+.back {
+  min-width: 96px;
+  height: 40px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* iOS button feel, and the same numbers as the volume steps: dim and shrink slightly
+   rather than invert. */
+.action:active:not(:disabled),
+.padKey:active:not(:disabled),
+.ok:active:not(:disabled),
+.back:active:not(:disabled) {
+  transform: scale(0.94);
+  background: var(--fill-2);
+}
+
+.action:disabled,
+.padKey:disabled,
+.ok:disabled,
+.back:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.action:focus-visible,
+.padKey:focus-visible,
+.ok:focus-visible,
+.back:focus-visible {
+  outline: 2px solid var(--label);
+  outline-offset: 4px;
+}

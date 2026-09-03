@@ -104,6 +104,22 @@ export const setSound = (control: ToneControl, db: number) => write('/api/sound'
 
 export const selectTvTarget = (target: string) => write('/api/tv', { target });
 
+/** The remote keys the TV accepts. Mirrors the API's own list. */
+export type TvKeyName = 'up' | 'down' | 'left' | 'right' | 'enter' | 'back' | 'menu';
+
+/**
+ * A press, not a state: nothing to read back, so nothing is written optimistically and
+ * the snapshot does not change. The TV either takes it or the request fails.
+ */
+export const sendTvKey = (key: TvKeyName) =>
+  fetch('/api/tv/key', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ key }),
+  }).then((response) => {
+    if (!response.ok) throw new ApiError(response.statusText, response.status);
+  });
+
 const player = (body: unknown) =>
   fetch('/api/player', {
     method: 'POST',
