@@ -26,8 +26,6 @@ export class WebosTv extends EventEmitter {
   #stopped = false;
   /** The second socket the remote keys go to; opened on the first press. */
   #input?: Promise<WebSocket>;
-  /** When the last key went out, so presses can be paced rather than dumped. */
-  #lastKeyAt = 0;
   /** Where brightness is heading, while a write is on its way to the set. */
   #backlightTarget: number | null = null;
   #writingBacklight = false;
@@ -86,23 +84,14 @@ export class WebosTv extends EventEmitter {
     if (!this.available) throw new Error('TV is not reachable');
 
     /*
-     * Paced, like the receiver's writes. Whether this set drops keys sent back-to-back
-     * is not established — the probe that was meant to answer it ran inside a video
-     * player, where the d-pad seeks instead of moving a highlight, so nothing was
-     * countable. A held-down arrow is the case that would expose it. The gap is cheap
-     * insurance until somebody counts tiles on the home screen; if it turns out to be
-     * unnecessary, deleting it is a one-line change.
+     * No pacing, and that is a measurement rather than an omission.
      *
-     * The slot is *claimed* before the wait, not stamped after it. Reading the clock,
-     * sleeping and then stamping lets two overlapping presses compute the same gap,
-     * sleep it together and send in the same tick — no pacing at all in exactly the
-     * case this exists for. Assigning first makes each caller queue behind the last.
+     * The receiver silently drops commands sent back-to-back, so this was paced 60ms
+     * apart on the assumption that the TV would too. It does not: five frames written
+     * to the input socket inside 1ms all landed, counted a tile at a time on the home
+     * screen. Whoever adds a press-and-hold repeat should measure again — that sends
+     * far more than five — but for the taps this app makes, the gap bought nothing.
      */
-    const now = Date.now();
-    const at = Math.max(now, this.#lastKeyAt + KEY_GAP_MS);
-    this.#lastKeyAt = at;
-    if (at > now) await new Promise((resolve) => setTimeout(resolve, at - now));
-
     // Newline-delimited text, not JSON, and the blank line at the end is required.
     await this.writeKeyFrame(`type:button\nname:${TV_KEYS[key]}\n\n`);
   }
@@ -381,9 +370,6 @@ export class WebosTv extends EventEmitter {
 }
 
 const RETRY_MS = 10_000;
-
-/** Minimum spacing between two key presses on the input socket. See `sendKey`. */
-const KEY_GAP_MS = 60;
 
 /**
  * How long to leave the set alone before asking what brightness it ended up on. The

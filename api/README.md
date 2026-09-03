@@ -221,12 +221,14 @@ Two findings from the real set worth not re-learning:
   highlight, so probing the d-pad while something is playing scrubs the picture and
   measures nothing. Probe from the home screen.
 
-Whether the set drops keys sent back-to-back the way the receiver does is **not
-established**; `sendKey` paces them 60 ms apart as cheap insurance, and the comment there
-says what would settle it. The pacing *claims* its slot before waiting rather than
-stamping the clock afterwards — read-sleep-stamp lets two overlapping presses compute the
-same gap, sleep it together and send in the same tick, which is no pacing at all in
-exactly the case it exists for.
+**The set does not drop keys sent back-to-back, and that is measured.** The receiver
+does, so these were paced 60 ms apart on the assumption that the TV would behave the
+same; it does not. Five frames written to the input socket inside 1 ms all landed —
+counted a tile at a time on the home screen, which is where a press moves a highlight
+one step and a human can see what arrived. The pacing is gone.
+
+Measure again before adding a press-and-hold repeat: that sends far more than five, and
+nothing here says where the limit is — only that it is above five in a millisecond.
 
 ## Now playing
 

@@ -43,6 +43,13 @@ The frontend:
 - The card content stagger is per `nth-child`; rules must cover **every** child a card can
   have, or extra sections animate in first.
 
+The TV:
+
+- **It does *not* drop keys sent back-to-back**, unlike the receiver — five frames in 1 ms
+  all landed. Measured on the home screen, where a press moves a highlight one tile.
+  Probe the d-pad from there and never from inside a video app: in a player the arrows
+  seek, so the presses scrub whatever is playing and measure nothing.
+
 The streamer:
 
 - Its etag **does not change as the track position advances**, so elapsed time is counted

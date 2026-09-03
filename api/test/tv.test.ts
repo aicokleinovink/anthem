@@ -106,20 +106,30 @@ describe('brightness', () => {
 });
 
 describe('remote keys', () => {
-  it('keeps overlapping presses apart on the wire', async () => {
+  it('writes the frame the set expects, in the form it expects it', async () => {
+    const tv = new TestTv();
+    await tv.sendKey('menu');
+    await tv.sendKey('up');
+
+    // Newline-delimited text rather than JSON, LG's own button names, and the trailing
+    // blank line the set requires. The app-facing names stay lowercase.
+    assert.deepEqual(
+      tv.frames.map((f) => f.frame),
+      ['type:button\nname:MENU\n\n', 'type:button\nname:UP\n\n'],
+    );
+  });
+
+  it('sends every key when they are pressed at once', async () => {
     const tv = new TestTv();
 
-    // Three presses started in the same tick, as three overlapping requests would be.
-    // The pacing used to read the clock, sleep, then stamp — so all three computed the
-    // same gap, slept it together and sent in the same millisecond.
-    await Promise.all([tv.sendKey('up'), tv.sendKey('up'), tv.sendKey('up')]);
+    /*
+     * Deliberately unpaced. The receiver drops commands sent back-to-back and this was
+     * paced on the assumption the TV would too — it does not: five frames inside 1ms
+     * all landed on the real set, counted a tile at a time on its home screen. What
+     * still has to hold is that no press is lost on the way to the socket.
+     */
+    await Promise.all([tv.sendKey('up'), tv.sendKey('down'), tv.sendKey('left')]);
 
     assert.equal(tv.frames.length, 3);
-    const gaps = tv.frames.slice(1).map((frame, index) => frame.at - tv.frames[index]!.at);
-    for (const gap of gaps) {
-      // 55 rather than 60: timers fire on or after their deadline, and the assertion is
-      // about the presses being spaced rather than about millisecond precision.
-      assert.ok(gap >= 55, `presses were ${gap}ms apart, which is not paced`);
-    }
   });
 });
