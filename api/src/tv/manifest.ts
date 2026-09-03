@@ -39,5 +39,13 @@ export const TV_MANIFEST = {
      * remote section rather than a broken one.
      */
     'CONTROL_MOUSE_AND_KEYBOARD',
+    /*
+     * Picture settings — OLED pixel brightness is the `backlight` key in the `picture`
+     * category. Same story as the d-pad: without these the set answers `401` for
+     * `settings/getSystemSettings`. Whether it will accept a *write* from an app that is
+     * not one of its own is a separate question the permission does not settle.
+     */
+    'READ_SETTINGS',
+    'WRITE_SETTINGS',
   ],
 };

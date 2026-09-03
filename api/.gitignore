@@ -1,3 +1,6 @@
 node_modules/
 dist/
 .env
+# The backup a re-pair makes of the client key. `.env.*` would be wrong here: it would
+# swallow .env.example, which is tracked on purpose.
+.env.backup-*
