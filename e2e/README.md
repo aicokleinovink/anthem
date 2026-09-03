@@ -11,10 +11,10 @@ npx playwright install chromium   # once
 npm run e2e
 ```
 
-`npm run ui` opens Playwright's UI mode instead — pick tests, re-run on save, step through
-the DOM snapshot timeline. It re-runs the *test* on save, not the app: the suite serves
-`frontend/dist`, so an edit under `frontend/src` needs a rebuild before the re-run means
-anything.
+`npm run e2e:ui` opens Playwright's UI mode instead — pick tests, re-run on save, step
+through the DOM snapshot timeline. It re-runs the *test* on save, not the app: the suite
+serves `frontend/dist`, so an edit under `frontend/src` needs a rebuild before the re-run
+means anything.
 
 The suite starts its own server: it builds the frontend and runs
 [`api/scripts/serve-fake.ts`](../api/scripts/serve-fake.ts), which is `createApp` with fake
