@@ -161,6 +161,37 @@ rather than a stale key. `src/tv/manifest.ts` is the single copy of the manifest
 exactly this reason: `pair-tv` and the running app must present the same list. Old and new
 keys coexist on the set, so re-pairing does not disturb anything else.
 
+### OLED pixel brightness, and the alert bridge
+
+`picture.backlight` is the setting the TV's own menus call OLED Pixel Brightness, 0-100.
+**Reading it is ordinary; writing it is not.**
+
+```
+settings/getSystemSettings {category:'picture', keys:['backlight']}   -> {"backlight":100}
+settings/setSystemSettings {category:'picture', settings:{...}}       -> 401, even with
+                                                                         WRITE_SETTINGS
+```
+
+Picture writes are reserved for the set's own apps. What does work — probed on the real
+set, 100 → 90 → 100 — is to have the TV make the change *itself*: `createAlert` carries a
+`luna://com.webos.settingsservice/setSystemSettings` action, and `closeAlert` fires it, so
+the call runs with the TV's own authority. The alert's message is a single space and it is
+closed immediately, so nothing readable reaches the screen.
+
+That is a hack on a private interface and LG can remove it in a firmware update. When
+they do, `setBacklight` throws and the card stops working; nothing else breaks, and the
+d-pad still reaches the same setting the long way round.
+
+Two more things about this corner:
+
+- **`keys` must contain only keys the category has.** One wrong name fails the whole
+  request with `500 Application error`, which reads as a broken service rather than as a
+  typo. That cost a detour.
+- **There is no subscription for it.** The value is read on connect and again after each
+  write, so a change made with the set's own remote is not noticed until then. The API
+  therefore reads before every write — brightness moves as a *step*, never as a level, so
+  the app can never overwrite the set with a stale number.
+
 Two findings from the real set worth not re-learning:
 
 - **The settings menu is an overlay, not an app.** `menu` opens it and `back` closes it,

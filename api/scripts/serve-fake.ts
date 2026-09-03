@@ -55,7 +55,13 @@ control.use(express.json());
 
 /** Everything the fakes have been asked to do since the last reset. */
 control.get('/log', (_req, res) => {
-  res.json({ receiver: fake.received, tv: tv.selections, tvKeys: tv.keys, player: player.actions });
+  res.json({
+    receiver: fake.received,
+    tv: tv.selections,
+    tvKeys: tv.keys,
+    tvBacklights: tv.backlights,
+    player: player.actions,
+  });
 });
 
 control.post('/log/reset', (_req, res) => {
@@ -63,6 +69,7 @@ control.post('/log/reset', (_req, res) => {
   tv.selections.length = 0;
   player.actions.length = 0;
   tv.keys.length = 0;
+  tv.backlights.length = 0;
   res.json({ ok: true });
 });
 

@@ -86,6 +86,10 @@ Three more that are worth knowing the shape of:
 - **`remote.spec.ts`** — the TV's remote keys, which are presses rather than settings:
   the assertion is the order they reached the set in, that the receiver was sent nothing,
   and that every key locks when the set is unreachable.
+- **`picture.spec.ts`** — the TV's brightness: a press is a *step*, the card shows what
+  the set reported, and it shows `––` rather than a number when the set reports nothing.
+  Watch the fakes here: a test that switches the TV off used to leave every later test
+  looking at a card with no value, which `--repeat-each` found.
 - **`layout.spec.ts`** — geometry at 375pt, the width the app is actually used at. It
   asserts relationships rather than pixel counts: the title column gets exactly the
   remainder after artwork, transport, gap and padding, and a longer title changes neither

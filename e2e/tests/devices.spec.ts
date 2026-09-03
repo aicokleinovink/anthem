@@ -5,17 +5,18 @@ import { expect, open, test } from './fixtures.js';
  * that a press under one group reaches that device and not the other.
  */
 test.describe('device groups', () => {
-  test('the TV group offers its two sections, and dispatches to the TV', async ({
+  test('the TV group offers its own sections, and dispatches to the TV', async ({
     page,
     control,
   }) => {
     await open(page);
     await page.getByRole('button', { name: 'TV', exact: true }).click();
 
-    // Two sections under the TV: the set's own sources, and its remote keys.
-    await expect(page.getByRole('tab')).toHaveCount(2);
-    await expect(page.getByRole('tab', { name: 'Inputs' })).toBeVisible();
-    await expect(page.getByRole('tab', { name: 'Remote' })).toBeVisible();
+    // The set's own sources, its remote keys, and its picture setting.
+    await expect(page.getByRole('tab')).toHaveCount(3);
+    for (const name of ['Inputs', 'Remote', 'Picture']) {
+      await expect(page.getByRole('tab', { name })).toBeVisible();
+    }
     await expect(page.getByRole('heading', { name: 'Watch' })).toBeVisible();
 
     await page.getByRole('button', { name: 'YouTube' }).click();

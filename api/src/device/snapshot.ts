@@ -46,6 +46,12 @@ export interface Snapshot {
     /** Which target is on screen, when it is one we offer. */
     current: string | null;
     targets: Array<{ key: string; label: string }>;
+    /**
+     * OLED pixel brightness, 0-100, or null when it has not been read — an old client
+     * key cannot read picture settings at all, and the card shows nothing rather than a
+     * made-up number.
+     */
+    backlight: number | null;
   };
 }
 
@@ -69,12 +75,13 @@ export interface TvState {
   available: boolean;
   current: string | null;
   targets: TvTarget[];
+  backlight: number | null;
 }
 
 export function snapshot(
   state: ReceiverState,
   player: NowPlaying | null = null,
-  tv: TvState = { available: false, current: null, targets: [] },
+  tv: TvState = { available: false, current: null, targets: [], backlight: null },
   zone: Zone = 1,
 ): Snapshot {
   const zoneState = state.zones[zone];
@@ -125,6 +132,7 @@ export function snapshot(
       available: tv.available,
       current: tv.current,
       targets: tv.targets.map(({ key, label }) => ({ key, label })),
+      backlight: tv.backlight,
     },
   };
 }

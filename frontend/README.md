@@ -331,6 +331,16 @@ The keys need a client key paired with `CONTROL_MOUSE_AND_KEYBOARD` in the manif
 install that has not re-paired since gets a failing press rather than a broken card. See
 [api/README.md](../api/README.md) for that and for the socket the keys travel on.
 
+`Picture` is the set's OLED pixel brightness, on the same dial the volume card uses —
+it is buried several menus deep on the TV and gets changed daily, which is the whole
+reason it has a card. The scale is the TV's own 0-100, so the dial reads it straight with
+no conversion, and the buttons move it by ten.
+
+Two of its states look alike and are not: **Off** is a set that cannot be reached, while
+**Unavailable** is a set that is on but whose client key predates the settings
+permissions. The dial shows `––` rather than a number in both — it never invents one —
+and re-pairing is what fixes the second.
+
 ## Settings
 
 Two settings, each in its own thin-outlined panel so they read as separate things rather

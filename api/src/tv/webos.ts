@@ -16,6 +16,8 @@ export class WebosTv extends EventEmitter {
   available = false;
   /** Which of TV_TARGETS is on screen, if any. */
   current: string | null = null;
+  /** OLED pixel brightness, 0-100, or null before the set has been asked. */
+  backlight: number | null = null;
 
   #socket?: WebSocket;
   #nextId = 0;
@@ -135,6 +137,65 @@ export class WebosTv extends EventEmitter {
     return promise;
   }
 
+  /**
+   * OLED pixel brightness — `backlight` in the set's `picture` category.
+   *
+   * Reading is an ordinary request. Note that the `keys` array must contain only keys
+   * the category actually has: one bad name fails the whole request with a `500`, which
+   * looks like the service is broken rather than like a typo.
+   */
+  async readBacklight(): Promise<number | null> {
+    if (!this.available) return null;
+    const answer = await this.#request('ssap://settings/getSystemSettings', {
+      category: 'picture',
+      keys: ['backlight'],
+    });
+    const settings = answer.settings as { backlight?: unknown } | undefined;
+    const value = Number(settings?.backlight);
+    if (!Number.isFinite(value)) return null;
+    this.backlight = value;
+    return value;
+  }
+
+  /**
+   * Set it, which the set will not simply let us do.
+   *
+   * `ssap://settings/setSystemSettings` answers `401` even with `WRITE_SETTINGS`
+   * granted: picture writes are reserved for the TV's own apps. What does work — probed
+   * on the real set — is to have the TV make the change *itself*: an alert carries a
+   * `luna://` action, and closing the alert fires it. The alert's message is a space and
+   * it is closed immediately, so nothing readable appears on screen.
+   *
+   * This is a hack on a private interface, and LG can take it away in a firmware update.
+   * If they do, the failure is this method throwing, not the app misbehaving — and the
+   * d-pad remains a way to reach the same setting the long way round.
+   */
+  async setBacklight(value: number): Promise<void> {
+    if (!this.available) throw new Error('TV is not reachable');
+    const target = Math.round(Math.min(100, Math.max(0, value)));
+
+    const uri = 'luna://com.webos.settingsservice/setSystemSettings';
+    // Strings: the settings service takes the value as text even though it reads back
+    // as a number.
+    const params = { category: 'picture', settings: { backlight: String(target) } };
+
+    const alert = await this.#request('ssap://system.notifications/createAlert', {
+      message: ' ',
+      buttons: [{ label: '', onClick: uri, params }],
+      onclose: { uri, params },
+      onfail: { uri, params },
+    });
+    const alertId = alert.alertId;
+    if (typeof alertId !== 'string') {
+      throw new Error('TV would not take the picture setting');
+    }
+    await this.#request('ssap://system.notifications/closeAlert', { alertId });
+
+    // The set is the authority: read back rather than trusting the write landed.
+    await this.readBacklight();
+    this.emit('changed');
+  }
+
   #connect(): void {
     const socket = new WebSocket(`ws://${this.host}:3000`);
     this.#socket = socket;
@@ -157,6 +218,7 @@ export class WebosTv extends EventEmitter {
       const was = this.available;
       this.available = false;
       this.current = null;
+      this.backlight = null;
       this.#pending.clear();
       // Its address was only valid for this session.
       void this.#input?.then((input) => input.close()).catch(() => {});
@@ -179,6 +241,17 @@ export class WebosTv extends EventEmitter {
       this.emit('changed');
       // Ask to be told what is on screen, rather than asking again and again.
       this.#subscribe('ssap://com.webos.applicationManager/getForegroundAppInfo');
+      /*
+       * Picture settings have no subscription here, so this is read once on connect and
+       * again after each write. Changing brightness with the TV's own remote will not
+       * show up until then — the card is honest about what it last read, which is the
+       * best available and worth knowing before trusting the number.
+       */
+      void this.readBacklight()
+        .then(() => this.emit('changed'))
+        .catch(() => {
+          // An un-repaired key cannot read settings; the card simply shows nothing.
+        });
       return;
     }
 

@@ -30,6 +30,8 @@ export interface Snapshot {
     available: boolean;
     current: string | null;
     targets: Array<{ key: string; label: string }>;
+    /** OLED pixel brightness, 0-100, or null when the set has not reported one. */
+    backlight: number | null;
   };
 }
 
@@ -116,6 +118,20 @@ export const sendTvKey = (key: TvKeyName) =>
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ key }),
+  }).then((response) => {
+    if (!response.ok) throw new ApiError(response.statusText, response.status);
+  });
+
+/**
+ * Brightness moves in steps, never as a level: the TV owns the value, and the API reads
+ * it before writing so a change made with the set's own remote is never overwritten by
+ * a stale number from here.
+ */
+export const stepTvBacklight = (steps: number) =>
+  fetch('/api/tv/backlight', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ steps }),
   }).then((response) => {
     if (!response.ok) throw new ApiError(response.statusText, response.status);
   });

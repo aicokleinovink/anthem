@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import { selectTvTarget } from '../api';
+import { selectTvTarget, stepTvBacklight } from '../api';
 import type { ReceiverController } from './useReceiver';
 
 export interface TvController {
@@ -8,6 +8,10 @@ export interface TvController {
   current: string | null;
   targets: Array<{ key: string; label: string }>;
   select: (target: string) => void;
+  /** OLED pixel brightness the set last reported, 0-100, or null if it has not. */
+  backlight: number | null;
+  /** Move it by so many points; the set decides where that lands. */
+  stepBacklight: (steps: number) => void;
 }
 
 /**
@@ -27,13 +31,31 @@ export function useTvTargets(receiver: ReceiverController): TvController {
     [snapshot, write],
   );
 
+  /*
+   * Optimistic, like the receiver's own writes: the number moves at once and the set
+   * corrects it a moment later when the API has read it back. Without this a press
+   * would sit there doing nothing for as long as the alert bridge takes.
+   */
+  const stepBacklight = useCallback(
+    (steps: number) => {
+      if (!snapshot || snapshot.tv.backlight === null) return;
+      const optimistic = Math.min(100, Math.max(0, snapshot.tv.backlight + steps));
+      write({ ...snapshot, tv: { ...snapshot.tv, backlight: optimistic } }, () =>
+        stepTvBacklight(steps),
+      );
+    },
+    [snapshot, write],
+  );
+
   return useMemo(
     () => ({
       available: snapshot?.tv.available ?? false,
       current: snapshot?.tv.current ?? null,
       targets: snapshot?.tv.targets ?? [],
       select,
+      backlight: snapshot?.tv.backlight ?? null,
+      stepBacklight,
     }),
-    [snapshot, select],
+    [snapshot, select, stepBacklight],
   );
 }
