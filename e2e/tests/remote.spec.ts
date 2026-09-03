@@ -9,7 +9,8 @@ import type { Page } from '@playwright/test';
 const remote = async (page: Page) => {
   await page.getByRole('button', { name: 'TV', exact: true }).click();
   await page.getByRole('tab', { name: 'Remote' }).click();
-  await expect(page.getByRole('heading', { name: 'Navigate' })).toBeVisible();
+  // The pad is the card: no panel headings to wait on, so wait on its centre.
+  await expect(page.getByRole('button', { name: 'OK', exact: true })).toBeVisible();
 };
 
 test.describe('the TV remote', () => {
@@ -17,9 +18,23 @@ test.describe('the TV remote', () => {
     await open(page);
     await remote(page);
 
-    for (const name of ['Settings menu', 'Up', 'Left', 'OK', 'Right', 'Down', 'Back']) {
-      await page.getByRole('button', { name, exact: true }).click();
-    }
+    /*
+     * The four directions are wedges of one disc, so each one's *bounding box* is the
+     * whole disc and its centre sits under the OK cap — a plain `.click()` aims at that
+     * centre and the cap swallows it. Aim at the glyph instead, which is drawn inside
+     * the wedge it belongs to. (A thumb has no such problem: it lands where it lands,
+     * and the clip-path decides which quarter that is.)
+     */
+    const direction = (name: string) =>
+      page.getByRole('button', { name, exact: true }).locator('svg');
+
+    await page.getByRole('button', { name: 'Settings menu', exact: true }).click();
+    await direction('Up').click();
+    await direction('Left').click();
+    await page.getByRole('button', { name: 'OK', exact: true }).click();
+    await direction('Right').click();
+    await direction('Down').click();
+    await page.getByRole('button', { name: 'Back', exact: true }).click();
 
     // In order, and named as the app names them — the wire spelling (`UP`, `MENU`) stays
     // inside the API's `tv/keys.ts` and nothing in the UI knows it.

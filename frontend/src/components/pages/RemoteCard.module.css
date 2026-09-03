@@ -1,29 +1,171 @@
 /*
- * The TV remote: a row of round action keys, and a d-pad below it.
+ * One round pad, in the volume dial's language: a glass disc the size of the dial, with
+ * the four directions cut out of it as wedges rather than sitting on it as four buttons.
+ * Below it the small keys, in the row the volume card uses for its steps.
  *
- * Every key is the same glass button as the volume steps — translucent fill, specular
- * edge, no blur of its own because the card behind it has already blurred the artwork.
- * Sizes differ between the row and the pad; nothing else does.
+ * Deliberately no rim, no dividers and no outlines — the shape and the glyphs carry it,
+ * and a press lights the quarter it landed in.
  */
 
-/* Four columns from the start, so the buttons that are not there yet still hold their
-   place and the cog does not move when they arrive. */
-.actions {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  place-items: center;
-  padding: 4px 0 2px;
+.pad {
+  position: relative;
+  width: 100%;
+  max-width: 268px;
+  /* Square whatever the width does, so the wedges stay quarters of a circle. */
+  aspect-ratio: 1;
+  margin: 18px auto 0;
+  border-radius: 50%;
+  /*
+   * Glass, not an outlined circle: a faint fill with the same sheen the cards carry, so
+   * the disc reads as a pane the artwork shows through rather than as a drawn ring. No
+   * rim, no dividers between the quarters — the four glyphs say where the quarters are,
+   * and a press lights the one you hit.
+   */
+  background: var(--fill-2);
+  box-shadow: var(--sheen);
+  /* Wedges are clipped to their quarter; this keeps them inside the circle too. */
+  overflow: hidden;
+  animation: pad-in 520ms var(--spring) both;
 }
 
-.action,
-.padKey,
-.ok,
-.back {
+/*
+ * Each direction is a quarter of the disc, apex at the centre. Clip-path is what makes
+ * the hit area the wedge itself: pressing near the edge at four o'clock is Down, and
+ * there is no dead space between keys for a thumb to fall into.
+ */
+.wedge {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--label);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 160ms ease;
+}
+
+.wedge svg path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* The glyph sits near the edge of its quarter rather than in the middle of it, so the
+   four of them describe a compass instead of huddling round the OK cap. */
+.up {
+  clip-path: polygon(50% 50%, 0 0, 100% 0);
+  align-items: start;
+  justify-items: center;
+  padding-top: 22px;
+}
+
+.right {
+  clip-path: polygon(50% 50%, 100% 0, 100% 100%);
+  align-items: center;
+  justify-items: end;
+  padding-right: 22px;
+}
+
+.down {
+  clip-path: polygon(50% 50%, 100% 100%, 0 100%);
+  align-items: end;
+  justify-items: center;
+  padding-bottom: 22px;
+}
+
+.left {
+  clip-path: polygon(50% 50%, 0 100%, 0 0);
+  align-items: center;
+  justify-items: start;
+  padding-left: 22px;
+}
+
+/* A press lights the quarter it was in — the pad's own feedback, which four separate
+   buttons could not give: you see which way you pushed. */
+.wedge:active:not(:disabled) {
+  background: var(--fill-2);
+}
+
+.wedge:active:not(:disabled) svg {
+  transform: scale(0.9);
+}
+
+.wedge svg {
+  transition: transform 140ms var(--spring);
+}
+
+/*
+ * OK is the cap in the middle: brighter glass, the one thing on the pad rather than in
+ * it, so the centre reads as pressable without a label explaining the wedges.
+ */
+.ok {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 36%;
+  height: 36%;
+  transform: translate(-50%, -50%);
   display: grid;
   place-items: center;
   padding: 0;
   border: 0;
+  border-radius: 50%;
+  /* Brighter glass than the disc, which is the whole of what separates them: the cap is
+     laid on the pane, so it needs no ring to say so. */
+  background: var(--thumb);
+  box-shadow: var(--edge-soft);
+  color: var(--label);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 140ms var(--spring),
+    background 140ms ease;
+}
+
+.ok:active:not(:disabled) {
+  transform: translate(-50%, -50%) scale(0.92);
+  background: var(--fill-2);
+}
+
+/* Dimming the whole pad at once, rather than each key: it is one object. */
+.padLocked {
+  opacity: 0.3;
+}
+
+.padLocked .wedge,
+.padLocked .ok {
+  cursor: default;
+}
+
+/*
+ * The small keys, in the row and rhythm the volume card gives its steps: centred under
+ * the round control rather than ranged left in a grid of empty columns. Two keys
+ * centred read as deliberate; two keys in the first two of four slots read as unfinished.
+ * More arriving will shift these, which is the right trade for a card whose whole point
+ * is the shape in the middle.
+ */
+.keys {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 22px;
+}
+
+.key {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
   background: var(--thumb);
   box-shadow: var(--edge-soft);
   color: var(--label);
@@ -35,120 +177,60 @@
     opacity 160ms ease;
 }
 
-.action {
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-}
-
-/* Stroked like every other glyph in the app; the cog is the one filled shape, so it
-   carries its own rule rather than inheriting the stroke. */
-.padKey svg path {
+.key svg path {
   fill: none;
   stroke: currentColor;
-  stroke-width: 2.4;
+  stroke-width: 2.2;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.cog {
+/* The cog is the one filled glyph, so it opts out of the stroke above. */
+.key svg path.solid {
   fill: currentColor;
+  stroke: none;
 }
 
-/* Punched out of the cog, so the card's glass shows through the middle of it. */
-.cogHole {
+.hole {
   fill: var(--glass-thick);
 }
 
-/*
- * The pad is the shape of the thing it stands for: arrows on the cross, OK in the
- * middle. Explicit areas rather than source order, so the markup can read top, left,
- * centre, right, down while the grid stays a cross.
- */
-.pad {
-  display: grid;
-  grid-template-columns: repeat(3, 62px);
-  grid-template-rows: repeat(3, 62px);
-  gap: 8px;
-  justify-content: center;
-  padding: 6px 0 2px;
-}
-
-.padKey {
-  width: 62px;
-  height: 62px;
-  border-radius: 22px;
-}
-
-.up {
-  grid-area: 1 / 2;
-}
-
-.left {
-  grid-area: 2 / 1;
-}
-
-.centre {
-  grid-area: 2 / 2;
-}
-
-.right {
-  grid-area: 2 / 3;
-}
-
-.down {
-  grid-area: 3 / 2;
-}
-
-/* The one key that says what it is in words: it is the target, and a circle in the
-   middle of the cross reads as the centre of the pad rather than as a fifth arrow. */
-.ok {
-  width: 62px;
-  height: 62px;
-  border-radius: 50%;
-  font-size: 13.5px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-
-.below {
-  display: flex;
-  justify-content: center;
-  padding-top: 12px;
-}
-
-/* Wider than tall, because it is a word rather than a glyph — the same pill shape the
-   input lists use, so it does not read as a sixth pad key. */
-.back {
-  min-width: 96px;
-  height: 40px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-/* iOS button feel, and the same numbers as the volume steps: dim and shrink slightly
-   rather than invert. */
-.action:active:not(:disabled),
-.padKey:active:not(:disabled),
-.ok:active:not(:disabled),
-.back:active:not(:disabled) {
+.key:active:not(:disabled) {
   transform: scale(0.94);
   background: var(--fill-2);
 }
 
-.action:disabled,
-.padKey:disabled,
-.ok:disabled,
-.back:disabled {
+.key:disabled {
   opacity: 0.25;
   cursor: default;
 }
 
-.action:focus-visible,
-.padKey:focus-visible,
+.wedge:focus-visible,
 .ok:focus-visible,
-.back:focus-visible {
+.key:focus-visible {
   outline: 2px solid var(--label);
+  outline-offset: -4px;
+}
+
+.key:focus-visible {
   outline-offset: 4px;
+}
+
+/*
+ * The pad arrives as one object: a slight scale rather than the card content's rise, so
+ * the round thing lands like the dial does instead of sliding up like a list.
+ *
+ * Keyframes live beside the module that uses them — CSS Modules rewrites
+ * `animation-name`, so one defined in the global sheet would silently animate nothing.
+ */
+@keyframes pad-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
