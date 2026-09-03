@@ -148,4 +148,35 @@ test.describe('the shell at 375pt', () => {
     );
     expect(horizontal).toBe(0);
   });
+
+  /*
+   * The same assertion under a font wider than the system stack.
+   *
+   * This is not hypothetical: CI's Linux fallback renders the tabs ~30px wider than SF
+   * Pro, and the shell used to grow with them and push the page sideways — green on a
+   * Mac, red on CI. The cause was `.screen`'s implicit `auto` grid column, which is
+   * sized by its content, so the shell's own `width: min(390px, 100%)` never bound.
+   *
+   * Verdana stands in for "wider than we designed for". What must hold is that the tabs
+   * give way — shrinking and scrolling inside their own bar — rather than the page.
+   */
+  test('does not widen the page when the font renders wider', async ({ page }) => {
+    await open(page);
+    await page.addStyleTag({ content: '*{font-family:Verdana,sans-serif !important}' });
+    await page.waitForFunction(() =>
+      document.getAnimations().every((animation) => animation.playState !== 'running'),
+    );
+
+    const { horizontal, tabsFit } = await page.evaluate(() => {
+      const tabs = document.querySelector('[role="tablist"]') as HTMLElement;
+      return {
+        horizontal: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        // The row is allowed to be wider than its own box; that is what scrolls.
+        tabsFit: tabs.getBoundingClientRect().right <= window.innerWidth,
+      };
+    });
+
+    expect(horizontal).toBe(0);
+    expect(tabsFit).toBe(true);
+  });
 });
