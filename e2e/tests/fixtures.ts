@@ -18,6 +18,10 @@ export interface Control {
   tvKeys: () => Promise<string[]>;
   /** Brightness values written to the TV, in order. */
   tvBacklights: () => Promise<number[]>;
+  /** Make the set refuse brightness writes, as an un-repaired client key does. */
+  refuseTvBacklight: (refuse: boolean) => Promise<void>;
+  /** Report a brightness, as the set's own remote would — a known starting point. */
+  tvReportsBacklight: (value: number | null) => Promise<void>;
   /** The state the fake receiver holds — what a write actually landed on. */
   receiverState: () => Promise<Record<string, unknown>>;
   /** Broadcast frames from the receiver, without their terminators: `push('Z1POW1')`. */
@@ -37,6 +41,12 @@ function control(api: APIRequestContext): Control {
     playerActions: async () => (await (await api.get('/log')).json()).player,
     tvKeys: async () => (await (await api.get('/log')).json()).tvKeys,
     tvBacklights: async () => (await (await api.get('/log')).json()).tvBacklights,
+    refuseTvBacklight: async (refuse) => {
+      await api.post('/tv/refuse-backlight', { data: { refuse } });
+    },
+    tvReportsBacklight: async (value) => {
+      await api.post('/tv/backlight', { data: { value } });
+    },
     receiverState: async () => (await api.get('/receiver')).json(),
     push: async (...frames) => {
       await api.post('/push', { data: { frames } });

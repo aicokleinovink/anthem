@@ -64,7 +64,12 @@ export const MAX_DB = 10;
 /** Where the state comes from: one stream, pushed by the receiver itself. */
 export const EVENTS_URL = '/api/events';
 
-class ApiError extends Error {
+/**
+ * The API answered, and said no. Exported because that is a meaningful distinction for
+ * a caller: an `ApiError` proves the app can reach the API, so a device refusing a
+ * write is not the same event as the app being offline.
+ */
+export class ApiError extends Error {
   constructor(
     message: string,
     readonly status: number,

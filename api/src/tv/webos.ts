@@ -31,6 +31,8 @@ export class WebosTv extends EventEmitter {
   /** Where brightness is heading, while a write is on its way to the set. */
   #backlightTarget: number | null = null;
   #writingBacklight = false;
+  /** How long to leave the set alone before confirming. Shortened in tests. */
+  protected backlightConfirmMs = BACKLIGHT_CONFIRM_MS;
 
   constructor(
     private readonly host = config.tvHost,
@@ -83,8 +85,6 @@ export class WebosTv extends EventEmitter {
   async sendKey(key: TvKey): Promise<void> {
     if (!this.available) throw new Error('TV is not reachable');
 
-    const socket = await this.#inputSocket();
-
     /*
      * Paced, like the receiver's writes. Whether this set drops keys sent back-to-back
      * is not established — the probe that was meant to answer it ran inside a video
@@ -92,13 +92,25 @@ export class WebosTv extends EventEmitter {
      * countable. A held-down arrow is the case that would expose it. The gap is cheap
      * insurance until somebody counts tiles on the home screen; if it turns out to be
      * unnecessary, deleting it is a one-line change.
+     *
+     * The slot is *claimed* before the wait, not stamped after it. Reading the clock,
+     * sleeping and then stamping lets two overlapping presses compute the same gap,
+     * sleep it together and send in the same tick — no pacing at all in exactly the
+     * case this exists for. Assigning first makes each caller queue behind the last.
      */
-    const gap = KEY_GAP_MS - (Date.now() - this.#lastKeyAt);
-    if (gap > 0) await new Promise((resolve) => setTimeout(resolve, gap));
-    this.#lastKeyAt = Date.now();
+    const now = Date.now();
+    const at = Math.max(now, this.#lastKeyAt + KEY_GAP_MS);
+    this.#lastKeyAt = at;
+    if (at > now) await new Promise((resolve) => setTimeout(resolve, at - now));
 
     // Newline-delimited text, not JSON, and the blank line at the end is required.
-    socket.send(`type:button\nname:${TV_KEYS[key]}\n\n`);
+    await this.writeKeyFrame(`type:button\nname:${TV_KEYS[key]}\n\n`);
+  }
+
+  /** The frame going out on the input socket. Overridden in tests to record it. */
+  protected async writeKeyFrame(frame: string): Promise<void> {
+    const socket = await this.#inputSocket();
+    socket.send(frame);
   }
 
   /** The input socket, opened once per connection and shared by every press. */
@@ -178,6 +190,10 @@ export class WebosTv extends EventEmitter {
     if (base === null) throw new Error('TV would not report its picture settings');
 
     const target = Math.round(Math.min(100, Math.max(0, base + steps)));
+    // Already there: pressing brighter at 100 would otherwise put an alert on the
+    // screen to write the value the set already holds.
+    if (target === base) return;
+
     this.#backlightTarget = target;
     // Show the intent at once; the set is asked for the truth further down.
     this.backlight = target;
@@ -188,23 +204,42 @@ export class WebosTv extends EventEmitter {
 
     this.#writingBacklight = true;
     try {
+      /*
+       * Drain, settle, and go round again if anything arrived while settling.
+       *
+       * The settling wait is why the outer loop has to exist. The set applies a change
+       * a beat after the alert closes, so a read taken straight afterwards returns the
+       * *old* value — which then goes out on the stream and yanks the number on screen
+       * back. But a press landing during that wait finds `#writingBacklight` still set
+       * and returns without writing, so if the loop had already ended, its target was
+       * never written and every client was left showing a value the TV did not have.
+       */
       while (this.#backlightTarget !== null) {
-        const value = this.#backlightTarget;
-        this.#backlightTarget = null;
-        await this.#writeBacklight(value);
+        while (this.#backlightTarget !== null) {
+          const value = this.#backlightTarget;
+          this.#backlightTarget = null;
+          await this.writeBacklight(value);
+        }
+        await new Promise((resolve) => setTimeout(resolve, this.backlightConfirmMs));
       }
 
+      // Only now, with nothing outstanding, is the set's own number worth asking for.
+      await this.readBacklight();
+      this.emit('changed');
+    } catch (error) {
       /*
-       * Only now ask the set what it actually holds, and only once the presses have
-       * stopped. The set applies the change a beat after the alert closes, so a read
-       * taken straight afterwards returns the *old* value — which then went out on the
-       * stream and yanked the number on screen back. That was a real bug.
+       * A target was published that never landed. Ask the set what it actually holds
+       * rather than leaving every client showing the write we failed to make — and if
+       * even that cannot be read, show nothing instead of a number that is wrong.
        */
-      await new Promise((resolve) => setTimeout(resolve, BACKLIGHT_CONFIRM_MS));
-      if (this.#backlightTarget === null) {
+      this.#backlightTarget = null;
+      try {
         await this.readBacklight();
-        this.emit('changed');
+      } catch {
+        this.backlight = null;
       }
+      this.emit('changed');
+      throw error;
     } finally {
       this.#writingBacklight = false;
     }
@@ -223,7 +258,7 @@ export class WebosTv extends EventEmitter {
    * If they do, the failure is this throwing, not the app misbehaving — and the d-pad
    * remains a way to reach the same setting the long way round.
    */
-  async #writeBacklight(value: number): Promise<void> {
+  protected async writeBacklight(value: number): Promise<void> {
     const uri = 'luna://com.webos.settingsservice/setSystemSettings';
     // Strings: the settings service takes the value as text even though it reads back
     // as a number.

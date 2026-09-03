@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { stepTvBacklight } from '../api';
+import { ApiError, stepTvBacklight } from '../api';
 import type { ReceiverController } from './useReceiver';
 
 export interface BacklightController {
@@ -43,12 +43,18 @@ export function useBacklight(receiver: ReceiverController): BacklightController 
 
     void stepTvBacklight(steps)
       .then(() => reportWrite(true))
-      .catch(() => {
-        // Nothing reached the set — including the case of a client key paired before the
-        // settings permissions, which cannot write at all. Show the truth again.
+      .catch((error: unknown) => {
         pendingSteps.current = 0;
         setOptimistic(null);
-        reportWrite(false);
+        /*
+         * Whose failure this was matters. An `ApiError` means the API answered — the
+         * *set* refused the write, which is what a client key paired before the
+         * settings permissions does, or a firmware update that removes the bridge. The
+         * app is not offline, and saying it is would disable the volume dial, the power
+         * button and every other card over a TV setting. Only a rejected fetch, with no
+         * answer at all, is this app being unable to reach its API.
+         */
+        reportWrite(error instanceof ApiError);
       })
       .finally(() => {
         inFlight.current = false;

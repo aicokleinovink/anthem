@@ -343,6 +343,12 @@ every press after the first moved the number and never left the browser, and the
 snapshot pulled the display back. Presses now accumulate and go out as one `{ steps: N }`,
 the same way volume does.
 
+A failure here is **not** the app being offline, and the difference is load-bearing: an
+`ApiError` carries a status, which proves the API answered and the *set* refused — the
+normal state of an install that has not re-paired. Reporting that through the shared
+offline flag disabled the volume dial, the power button and every other card over a TV
+setting, so only a rejected fetch with no answer at all counts as offline.
+
 Two of its states look alike and are not: **Off** is a set that cannot be reached, while
 **Unavailable** is a set that is on but whose client key predates the settings
 permissions. The dial shows `––` rather than a number in both — it never invents one —

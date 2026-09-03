@@ -107,6 +107,11 @@ Three more that are worth knowing the shape of:
   `expect.poll(() => control.wire())`.
 - One worker, no parallelism: there is one app process with one set of fakes behind it, so
   parallel tests would change the volume under each other.
+- **Reset a flag where the log is reset, not at the end of the test that set it.**
+  `control.refuseTvBacklight` makes the fake set refuse picture writes; clearing it on
+  the last line of that test meant a *failure* left it set, and the symptom was a
+  different test failing on the next run against the same server. `/log/reset` clears it
+  now, so no test can leak it.
 - **Set up the state you are about to change.** The devices persist between tests, and
   selecting the input or profile that is *already* selected is a no-op — so a test that
   assumes a starting point passes without doing anything the moment something before it

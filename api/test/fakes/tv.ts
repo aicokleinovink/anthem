@@ -13,6 +13,12 @@ export class FakeTv extends WebosTv {
   readonly keys: TvKey[] = [];
   /** Every brightness the app wrote, in order. */
   readonly backlights: number[] = [];
+  /**
+   * Refuse brightness writes, as a set does when the client key predates the settings
+   * permissions or a firmware update removes the alert bridge. The app must survive
+   * that without claiming to be offline.
+   */
+  refuseBacklight = false;
 
   constructor() {
     // No host or client key, so the real WebSocket is never opened.
@@ -60,9 +66,20 @@ export class FakeTv extends WebosTv {
    */
   override async stepBacklight(steps: number): Promise<void> {
     if (!this.available) throw new Error('TV is not reachable');
+    if (this.refuseBacklight) throw new Error('401 insufficient permissions');
     const base = this.backlight ?? 100;
     this.backlight = Math.round(Math.min(100, Math.max(0, base + steps)));
     this.backlights.push(this.backlight);
+    this.emit('changed');
+  }
+
+  /**
+   * Report a brightness, as the set does when somebody changes it with its own remote.
+   * A test that is about to move the value starts by pinning it here, rather than
+   * assuming whatever the test before it left behind.
+   */
+  reportBacklight(value: number | null): void {
+    this.backlight = value;
     this.emit('changed');
   }
 

@@ -54,30 +54,36 @@
   stroke-linejoin: round;
 }
 
-/* The glyph sits near the edge of its quarter rather than in the middle of it, so the
-   four of them describe a compass instead of huddling round the OK cap. */
-.up {
+/*
+ * The quarters, keyed by the button's own `data-direction` rather than by a class per
+ * direction: one name to get wrong instead of five, and a typo shows up as an unstyled
+ * pad rather than as one wedge silently covering the disc.
+ *
+ * The glyph sits near the edge of its quarter rather than in the middle of it, so the
+ * four of them describe a compass instead of huddling round the OK cap.
+ */
+.wedge[data-direction='up'] {
   clip-path: polygon(50% 50%, 0 0, 100% 0);
   align-items: start;
   justify-items: center;
   padding-top: 22px;
 }
 
-.right {
+.wedge[data-direction='right'] {
   clip-path: polygon(50% 50%, 100% 0, 100% 100%);
   align-items: center;
   justify-items: end;
   padding-right: 22px;
 }
 
-.down {
+.wedge[data-direction='down'] {
   clip-path: polygon(50% 50%, 100% 100%, 0 100%);
   align-items: end;
   justify-items: center;
   padding-bottom: 22px;
 }
 
-.left {
+.wedge[data-direction='left'] {
   clip-path: polygon(50% 50%, 0 100%, 0 0);
   align-items: center;
   justify-items: start;

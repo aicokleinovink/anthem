@@ -201,6 +201,15 @@ Two more things about this corner:
   press is added to, one write at a time drains it, and pressing faster than the set can
   keep up loses nothing. Same shape as the receiver's volume coalescing, for the same
   reason.
+- **The settling wait needs the drain loop wrapped around it, not after it.** A press
+  that lands *during* the wait finds a write already in progress and returns without
+  writing — so if the loop had already ended, that target was never sent and every
+  client was left showing a value the set did not have. Drain, settle, and go round
+  again if anything arrived while settling.
+- **A refused write must put the value back.** The target is published before it is
+  written, so when the bridge fails the API asks the set what it actually holds rather
+  than leaving clients on a write that never landed. If even the read fails it reports
+  nothing, which the card draws as `––`.
 
 Two findings from the real set worth not re-learning:
 
@@ -214,7 +223,10 @@ Two findings from the real set worth not re-learning:
 
 Whether the set drops keys sent back-to-back the way the receiver does is **not
 established**; `sendKey` paces them 60 ms apart as cheap insurance, and the comment there
-says what would settle it.
+says what would settle it. The pacing *claims* its slot before waiting rather than
+stamping the clock afterwards — read-sleep-stamp lets two overlapping presses compute the
+same gap, sleep it together and send in the same tick, which is no pacing at all in
+exactly the case it exists for.
 
 ## Now playing
 

@@ -44,11 +44,20 @@ export function RemoteCard({ controller, offline }: RemoteCardProps) {
       dimmed={locked}
     >
       <div className={`${styles.pad} ${locked ? styles.padLocked : ''}`}>
-        {DIRECTIONS.map(({ key, label, area, rotate }) => (
+        {DIRECTIONS.map(({ key, label, rotate }) => (
           <button
             key={key}
             type="button"
-            className={`${styles.wedge} ${styles[area] ?? ''}`}
+            /*
+             * The direction is a data attribute rather than a second class. CSS Modules
+             * class lookups are an untyped record, so `styles[direction]` compiled fine
+             * and yielded `undefined` if the class were ever renamed — and a wedge with
+             * no clip-path is `inset: 0`, covering the whole disc and swallowing the
+             * other three directions. One class, styled by attribute, cannot fail that
+             * way.
+             */
+            className={styles.wedge}
+            data-direction={key}
             disabled={locked}
             aria-label={label}
             onClick={() => press(key)}
@@ -92,12 +101,13 @@ export function RemoteCard({ controller, offline }: RemoteCardProps) {
 }
 
 /** The four wedges, in the order they are read out rather than the order they are drawn. */
-const DIRECTIONS: Array<{ key: TvKeyName; label: string; area: string; rotate: number }> = [
-  { key: 'up', label: 'Up', area: 'up', rotate: 0 },
-  { key: 'right', label: 'Right', area: 'right', rotate: 90 },
-  { key: 'down', label: 'Down', area: 'down', rotate: 180 },
-  { key: 'left', label: 'Left', area: 'left', rotate: -90 },
-];
+const DIRECTIONS: Array<{ key: 'up' | 'right' | 'down' | 'left'; label: string; rotate: number }> =
+  [
+    { key: 'up', label: 'Up', rotate: 0 },
+    { key: 'right', label: 'Right', rotate: 90 },
+    { key: 'down', label: 'Down', rotate: 180 },
+    { key: 'left', label: 'Left', rotate: -90 },
+  ];
 
 const KEYS: Array<{ key: TvKeyName; label: string; icon: React.ReactNode }> = [
   {

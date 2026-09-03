@@ -70,6 +70,13 @@ control.post('/log/reset', (_req, res) => {
   player.actions.length = 0;
   tv.keys.length = 0;
   tv.backlights.length = 0;
+  /*
+   * Not just the logs: a test that makes the set refuse writes must not leave it
+   * refusing for everything after it. Resetting here rather than at the end of that
+   * test means a failure cannot leak the flag either — which it did, and the symptom
+   * was a *different* test failing on the next run.
+   */
+  tv.refuseBacklight = false;
   res.json({ ok: true });
 });
 
@@ -103,6 +110,18 @@ control.post('/app/start', (_req, res) => {
 
 control.post('/player', (req, res) => {
   player.set((req.body as { now: Parameters<FakePlayer['set']>[0] }).now);
+  res.json({ ok: true });
+});
+
+/** Report a brightness, as the set's own remote would. */
+control.post('/tv/backlight', (req, res) => {
+  tv.reportBacklight((req.body as { value: number | null }).value);
+  res.json({ ok: true });
+});
+
+/** Make the fake set refuse brightness writes, the way an un-repaired key does. */
+control.post('/tv/refuse-backlight', (req, res) => {
+  tv.refuseBacklight = Boolean((req.body as { refuse?: unknown }).refuse);
   res.json({ ok: true });
 });
 
