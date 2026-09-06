@@ -171,10 +171,21 @@ The sources are read from the receiver, names and all — on this unit: HDMI 1, 
 TV / PlayStation, Streamer. Tapping one switches it, optimistically, then corrected by what
 the receiver confirms.
 
-Selection uses **the toolbar's sliding pill turned on its side**: one element that moves
-between rows rather than a background on each, with the same overshoot easing, so the two
-navigations feel like one idea. It lives in `components/shared/PillList.tsx` and is shared with the
-speaker-profile picker.
+Selection uses **a grid of glassy tiles**, one per source, in
+`components/shared/SourceTiles.tsx` and shared with the TV card. A source is a destination
+rather than a setting, and a destination wants a face: each tile carries an icon, mapped in
+`components/shared/sourceIcons.ts` from the TV's target key or from what the receiver's own
+input name contains, with a generic socket as the fallback so an unmapped input still
+renders a tile.
+
+The icons are single-shape SVGs under `src/assets/sources/`, used as **masks rather than
+images**: the tile fills them with its own colour, so an icon dims with its tile and a brand
+mark never arrives as the one saturated thing on a monochrome surface. The selected tile is
+the pill thumb's material — brighter glass with a lit rim, raised out of the groove the
+others are cut into — which is what carries the selection when the whole card is dimmed.
+
+The sliding pill (`components/shared/PillList.tsx`) stays where the list *is* a settings
+list: the speaker-profile and display pickers on the settings card.
 
 The header shows the format of the signal actually arriving (`Dolby D+`, `2.0 PCM`,
 `No Signal`), and when something *is* playing three small bars animate on the selected row.
@@ -304,8 +315,10 @@ plastic with nothing to refract.
 
 ## TV
 
-Under the TV device, `Inputs` is the set's own sources. Four pills — HDMI 1, PlayStation, YouTube, Netflix — switching the LG set's input or
-launching an app. The selection is not assumed: the API subscribes to what the TV reports
+Under the TV device, `Inputs` is the set's own sources. A grid of tiles — HDMI 1,
+PlayStation, YouTube, Netflix, Apple TV — switching the LG set's input or launching an app.
+Apple TV is on `HDMI_4` on an assumption, not a measurement; see the comment in
+`api/src/tv/targets.ts`. The selection is not assumed: the API subscribes to what the TV reports
 as its foreground app, so the highlight follows the set even when you change it with its own
 remote, and shows nothing when it is on something outside this list.
 
@@ -528,7 +541,9 @@ src/hooks/useBacklight.ts      the TV's OLED pixel brightness, and press coalesc
 src/hooks/useDisplay.ts        front panel displayed info
 src/hooks/useSound.ts          bass, treble and subwoofer trim, and drag coalescing
 src/hooks/usePlayerMorph.ts    the player's geometry between the strip and the card slot
-src/components/shared/         Card, Panel, Toolbar, DeviceSwitcher, PowerButton, PillList, …
+src/components/shared/         Card, Panel, Toolbar, DeviceSwitcher, PowerButton, PillList,
+                               SourceTiles, …
+src/assets/sources/            the mask SVGs the source tiles draw their icons from
 src/components/pages/          one card per device section, RemoteCard included
 src/styles/global.css          tokens, reset, shared keyframes
 public/                        icons and the web manifest, copied to the root of dist/

@@ -1,6 +1,7 @@
 import { Card } from '../shared/Card';
 import { Panel } from '../shared/Panel';
-import { PillList } from '../shared/PillList';
+import { SourceTiles } from '../shared/SourceTiles';
+import { iconForTvTarget } from '../shared/sourceIcons';
 import type { TvController } from '../../hooks/useTvTargets';
 
 interface TvCardProps {
@@ -24,12 +25,14 @@ export function TvCard({ controller, offline }: TvCardProps) {
       dimmed={locked}
     >
       <Panel title="Watch">
-        <PillList
-          items={targets.map((target) => ({ key: target.key, label: target.label }))}
+        <SourceTiles
+          items={targets.map((target) => ({
+            key: target.key,
+            label: target.label,
+            icon: iconForTvTarget(target.key),
+          }))}
           selected={current}
           disabled={locked}
-          align="top"
-          compact
           emptyLabel="No sources configured"
           onSelect={(key) => select(String(key))}
         />

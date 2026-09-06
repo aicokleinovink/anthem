@@ -35,4 +35,16 @@ export const TV_TARGETS: TvTarget[] = [
     foregroundId: 'youtube.leanback.v4',
   },
   { key: 'netflix', label: 'Netflix', kind: 'app', id: 'netflix', foregroundId: 'netflix' },
+  {
+    key: 'appletv',
+    label: 'Apple TV',
+    kind: 'input',
+    /*
+     * HDMI_4 is an assumption, not a measured fact: one of the two AirPlay devices on the
+     * network is probably the Apple TV, and probably on this socket. Nobody has asked the
+     * set. If it switches to the wrong input, the fix is this line.
+     */
+    id: 'HDMI_4',
+    foregroundId: 'com.webos.app.hdmi4',
+  },
 ];
