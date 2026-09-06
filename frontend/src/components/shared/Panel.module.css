@@ -32,9 +32,20 @@
     inset 0 0 0 1px rgb(255 255 255 / 5%);
 }
 
+/*
+ * The title's line, so a value the title names can sit opposite it rather than under
+ * it — the number then stays next to the control it describes. The horizontal padding
+ * lives here rather than on the title so both ends line up with the panel's contents.
+ */
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 14px;
+}
+
 .title {
   margin: 4px 0 2px;
-  padding: 0 14px;
   color: var(--label-2);
   font-size: 12px;
   font-weight: 600;

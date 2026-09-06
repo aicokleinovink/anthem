@@ -373,9 +373,12 @@ third profile on the receiver makes it appear on its own.
 
 ## Sound
 
-Three trims — **Bass**, **Treble** and **Subwoofer** — each in its own panel with its
-current level above the slider. Anthem's own app offers the rest of the channel levels
-too (Front, Front Wide, Center, and so on); these three are the ones that get touched.
+Three trims — **Bass**, **Treble** and **Subwoofer** — each in its own panel, with the
+panel title on the left of a row and its current level opposite on the right, and the
+slider below the pair. The reading sits beside the name of what it reads rather than
+under it, where the thumb would slide away from it. Anthem's own app offers the rest of
+the channel levels too (Front, Front Wide, Center, and so on); these three are the ones
+that get touched.
 
 The range is **−10.0 to +10.0 dB in 0.5 dB steps**, and it comes from the API rather than
 being written down here — the receiver's limits belong to the receiver.
