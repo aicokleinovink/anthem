@@ -1,9 +1,12 @@
 import { expect, open, test } from './fixtures.js';
 import type { Page } from '@playwright/test';
 
-/** The reading printed above a slider, e.g. "+4.5 dB" — found from the slider itself. */
+/**
+ * The reading opposite a slider's title, e.g. "+4.5 dB" — found from the slider itself,
+ * so it climbs to the panel the two share rather than to the slider's own row.
+ */
 const reading = (page: Page, name: string) =>
-  page.getByRole('slider', { name }).locator('xpath=..').getByText(/dB$/);
+  page.getByRole('slider', { name }).locator('xpath=ancestor::section[1]').getByText(/dB$/);
 
 /**
  * Put all three trims back to flat before touching them.

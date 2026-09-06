@@ -1,10 +1,11 @@
 .row {
-  display: grid;
-  gap: 2px;
   padding: 0 14px 4px;
 }
 
 /*
+ * Sits opposite the panel title, so the reading stays beside the control it names
+ * instead of being stranded at the left while the thumb slides away from it.
+ *
  * Tabular figures, so the number does not shuffle sideways as it counts through a drag.
  * The sign is always there for the same reason: the width never changes.
  */

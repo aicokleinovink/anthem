@@ -35,7 +35,15 @@ export function SoundCard({ controller, powerOn, offline }: SoundCardProps) {
       dimmed={locked}
     >
       {controls.map((control) => (
-        <Panel key={control.key} title={control.label}>
+        <Panel
+          key={control.key}
+          title={control.label}
+          trailing={
+            <span className={styles.value}>
+              {control.db !== null ? reading(control.db) : '––'}
+            </span>
+          }
+        >
           <Row
             control={control}
             minDb={minDb}
@@ -70,7 +78,6 @@ function Row({ control, minDb, maxDb, stepDb, disabled, onChange }: RowProps) {
 
   return (
     <div className={styles.row}>
-      <span className={styles.value}>{ready ? reading(db) : '––'}</span>
       <input
         type="range"
         className={styles.range}
