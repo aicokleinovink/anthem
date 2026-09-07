@@ -121,7 +121,7 @@ Accept the prompt with the remote and put the key it prints in `.env` as `TV_CLI
 alongside `TV_HOST`. Later connections present that key and pair silently. Leave either
 empty and the TV section simply does not appear.
 
-What the card offers is `src/tv/targets.ts` — edit that list to change the pills. The ids
+What the card offers is `src/tv/targets.ts` — edit that list to change the tiles. The ids
 came from asking the set itself (`ssap://tv/getExternalInputList` and `listLaunchPoints`),
 and inputs and apps are launched the same way, only the payload differs. Which one is on
 screen comes from a **subscription** to `getForegroundAppInfo`, so the selection follows the
