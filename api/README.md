@@ -63,9 +63,9 @@ deeper and a relative hop from it would miss.
 | PUT | `/api/tv` | `{ "target": "netflix" }` | `{ target }` |
 
 ```bash
-curl localhost:3000/api/volume
-curl -X PUT localhost:3000/api/volume -H 'content-type: application/json' -d '{"db":-60}'
-curl -X POST localhost:3000/api/volume/step -H 'content-type: application/json' -d '{"steps":-3}'
+curl localhost:3540/api/volume
+curl -X PUT localhost:3540/api/volume -H 'content-type: application/json' -d '{"db":-60}'
+curl -X POST localhost:3540/api/volume/step -H 'content-type: application/json' -d '{"steps":-3}'
 ```
 
 Every response reports the level the **receiver confirmed**, never an echo of the request.

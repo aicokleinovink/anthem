@@ -3,7 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 
-/** Away from 3000, so a dev server left running does not get tested by accident. */
+/** Away from 3540, so a dev server left running does not get tested by accident. */
 const PORT = 3100;
 const CONTROL_PORT = 3101;
 
