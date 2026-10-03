@@ -20,12 +20,12 @@ connection to the receiver (a browser cannot open raw sockets).
 cd .. && npm run dev         # starts the API and Vite together
 ```
 
-Then open **`http://localhost:5173`**, not `:3000`. Both ports serve the app, but only one
+Then open **`http://localhost:5173`**, not `:3540`. Both ports serve the app, but only one
 serves *this* working tree: `:5173` is Vite reading from source with hot reload, while the
-API on `:3000` serves `frontend/dist` — whatever was last built, which after a branch
-switch looks like the branch not working. `:3000` is for checking a build, nothing else.
+API on `:3540` serves `frontend/dist` — whatever was last built, which after a branch
+switch looks like the branch not working. `:3540` is for checking a build, nothing else.
 
-`vite.config.ts` proxies `/api` → `http://localhost:3000`, so the page is same-origin and
+`vite.config.ts` proxies `/api` → `http://localhost:3540`, so the page is same-origin and
 there is no CORS to configure.
 
 The two can still be started separately (`npm run dev` in `api/`, then here) when you want

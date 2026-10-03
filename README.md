@@ -26,8 +26,8 @@ cd ../api && npm install && cp .env.example .env   # ANTHEM_HOST defaults to 192
 npm run build && npm start
 ```
 
-Open `http://localhost:3000`. From your phone, use the machine's LAN address —
-`http://<your-machine>:3000` — then Add to Home Screen.
+Open `http://localhost:3540`. From your phone, use the machine's LAN address —
+`http://<your-machine>:3540` — then Add to Home Screen.
 
 **While developing**, one command from the repo root starts both servers, clears the ports
 first, and stops both on Ctrl+C:
@@ -37,7 +37,7 @@ npm run dev
 ```
 
 Open **`http://localhost:5173`** — that is Vite, serving from source with hot reload and
-proxying `/api` to the service. Port 3000 is the API, and on its own it serves the *last
+proxying `/api` to the service. Port 3540 is the API, and on its own it serves the *last
 frontend build*, so after switching branches it shows something silently stale; use it only
 when you mean to check a build.
 

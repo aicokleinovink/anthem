@@ -87,14 +87,14 @@ The same trick works for anything else the unit's UI can do but the docs do not 
 ## Running and checking
 
 ```bash
-npm run dev                    # both servers; open :5173, not :3000 (see below)
+npm run dev                    # both servers; open :5173, not :3540 (see below)
 cd api && npm test             # 27 tests, no hardware needed
 cd api && npm run probe        # read-only protocol probe against the real receiver
 ```
 
 `npm run dev` at the root starts `tsx watch` in `api/` and Vite in `frontend/`, clears
 both ports first, and kills both process groups on Ctrl+C. **Open :5173** — the API on
-:3000 serves `frontend/dist`, so on its own it shows the last build, which after a branch
+:3540 serves `frontend/dist`, so on its own it shows the last build, which after a branch
 switch is silently stale.
 
 For a single process on one port: build the frontend, then `npm run build && npm start` in
@@ -107,4 +107,4 @@ For a single process on one port: build the frontend, then `npm run build && npm
 - The automated browser pane often reports `document.hidden`, so timers are throttled,
   CSS transitions do not advance, and `requestAnimationFrame` never fires. Read state from
   the DOM rather than trusting a screenshot taken mid-animation.
-- **Kill stray dev servers.** Several times a "bug" was an old process still on port 3000.
+- **Kill stray dev servers.** Several times a "bug" was an old process still on port 3540.

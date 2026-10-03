@@ -19,7 +19,7 @@ means anything.
 The suite starts its own server: it builds the frontend and runs
 [`api/scripts/serve-fake.ts`](../api/scripts/serve-fake.ts), which is `createApp` with fake
 clients in place of the three real ones. That is one process on one port serving the built
-UI and the API — the same shape production runs in, on 3100 rather than 3000 so a dev server
+UI and the API — the same shape production runs in, on 3100 rather than 3540 so a dev server
 left running is never tested by accident.
 
 ## Why the fakes sit at the device layer

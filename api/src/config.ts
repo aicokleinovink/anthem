@@ -35,7 +35,7 @@ export const config = {
   tvClientKey: process.env.TV_CLIENT_KEY ?? '',
 
   /** HTTP port for this API. */
-  httpPort: num(process.env.PORT, 3000),
+  httpPort: num(process.env.PORT, 3540),
 
   /**
    * Optional soft ceiling for volume writes, in dB. Off by default: the receiver has

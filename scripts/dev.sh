@@ -21,7 +21,7 @@ set -m
 
 cd "$(dirname "$0")/.."
 
-API_PORT=3000
+API_PORT=3540
 UI_PORT=5173
 
 # CLAUDE.md warns twice that a stray dev server has been mistaken for an app bug, and

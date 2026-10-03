@@ -6,6 +6,6 @@ export default defineConfig({
   server: {
     // The API holds the TCP socket to the receiver; proxying keeps us same-origin,
     // so there is no CORS to configure on the Express side.
-    proxy: { '/api': 'http://localhost:3000' },
+    proxy: { '/api': 'http://localhost:3540' },
   },
 });
